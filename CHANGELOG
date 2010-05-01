@@ -1,3 +1,10 @@
+v.2.5 - Changes to iptables only
+
+- iptables now allows spaces or tabs after the protocol name in the
+protocol files.  This allows, for instance, "http " or "http I am the
+coolest!!!" instead of just "http" in http.pat.  Pattern writers should
+stay conservative in what they send, however.
+
 v2.4.1
 
 - I had accidentally overwritten the 2.4 patch with a newer version of the
