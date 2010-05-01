@@ -29,20 +29,26 @@ In this directory you will find:
 ***** iptables patches *****
 
 - a patch for iptables called
-  "iptables-for-kernel-pre2.6.20-layer7-[l7-filter version].patch"
+  "iptables-1.3-for-kernel-pre2.6.20-layer7-[l7-filter version].patch"
 
-  Use this patch if you are compiling against Linux 2.6.19.x or earlier, 
-  including 2.4.x.   You do *not* need to recompile if your kernel version
-  later changes to 2.6.20 or later and you already have a working iptables.
+  Use this patch if you are compiling iptables 1.3.x against Linux 2.6.19.x or
+  earlier, including 2.4.x.
 
 - a patch for iptables called
-  "iptables-for-kernel-2.6.20forward-layer7-[l7-filter version].patch"
+  "iptables-1.3-for-kernel-2.6.20forward-layer7-[l7-filter version].patch"
 
-  Use this patch if you are compiling against Linux 2.6.20 or later.
-  You do *not* need to recompile if you downgrade your kernel to 2.6.19.x
-  or earlier and you already have a working iptables.
+  Use this patch if you are compiling iptables 1.3.x against Linux 2.6.20 or
+  later.
 
-  These patches are against iptables 1.3.8, but they only add files (they
-  don't change any existing ones) and so should work with any reasonably
-  modern version of iptables and should continue to work for all future
-  versions unless major changes are made to the iptables architecture.
+- a patch for iptables called
+  "iptables-1.4-for-kernel-2.6.20forward-layer7-[l7-filter version].patch"
+
+  Use this patch if you are compiling iptables 1.4.x against Linux 2.6.20 or
+  later.
+
+In every case, you do *not* need to recompile if you change your running 
+kernel version across the 2.6.20 boundary and you already have a working 
+iptables.
+
+If you need to compile iptables 1.3.x against Linux 2.6.19.x or earlier, let
+us know.
