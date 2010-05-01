@@ -1,3 +1,8 @@
+v2.21 - Updated for Linux 2.6.27 and 2.6.28.  Removed #if 
+LINUX_VERSION_CODE statements that can't ever be true because of how 
+these patches are organized.
+
+
 v2.20 - Cleaned iptables files.  For iptables 1.4.1.1 forward, removed 
 .layer7-test, fixed help text, conformed to current negation convention 
 ('!' flag goes before options rather than between option and argument), 

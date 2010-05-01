@@ -1,6 +1,6 @@
---- linux-2.6.25/net/netfilter/Kconfig	2008-04-16 21:49:44.000000000 -0500
-+++ linux-2.6.25-layer7/net/netfilter/Kconfig	2008-04-29 00:40:01.000000000 -0500
-@@ -735,6 +735,27 @@ config NETFILTER_XT_MATCH_STATE
+--- linux-2.6.28-stock/net/netfilter/Kconfig	2009-01-07 16:05:35.000000000 -0600
++++ linux-2.6.28/net/netfilter/Kconfig	2009-01-07 16:07:31.000000000 -0600
+@@ -795,6 +795,27 @@ config NETFILTER_XT_MATCH_STATE
  
  	  To compile it as a module, choose M here.  If unsure, say N.
  
@@ -27,26 +27,26 @@
 +
  config NETFILTER_XT_MATCH_STATISTIC
  	tristate '"statistic" match support'
- 	depends on NETFILTER_XTABLES
---- linux-2.6.25/net/netfilter/Makefile	2008-04-16 21:49:44.000000000 -0500
-+++ linux-2.6.25-layer7/net/netfilter/Makefile	2008-04-29 00:40:01.000000000 -0500
-@@ -77,6 +77,7 @@ obj-$(CONFIG_NETFILTER_XT_MATCH_RATEEST)
- obj-$(CONFIG_NETFILTER_XT_MATCH_REALM) += xt_realm.o
+ 	depends on NETFILTER_ADVANCED
+--- linux-2.6.28-stock/net/netfilter/Makefile	2009-01-07 16:05:35.000000000 -0600
++++ linux-2.6.28/net/netfilter/Makefile	2009-01-07 16:07:31.000000000 -0600
+@@ -84,6 +84,7 @@ obj-$(CONFIG_NETFILTER_XT_MATCH_RECENT) 
  obj-$(CONFIG_NETFILTER_XT_MATCH_SCTP) += xt_sctp.o
+ obj-$(CONFIG_NETFILTER_XT_MATCH_SOCKET) += xt_socket.o
  obj-$(CONFIG_NETFILTER_XT_MATCH_STATE) += xt_state.o
 +obj-$(CONFIG_NETFILTER_XT_MATCH_LAYER7) += xt_layer7.o
  obj-$(CONFIG_NETFILTER_XT_MATCH_STATISTIC) += xt_statistic.o
  obj-$(CONFIG_NETFILTER_XT_MATCH_STRING) += xt_string.o
  obj-$(CONFIG_NETFILTER_XT_MATCH_TCPMSS) += xt_tcpmss.o
---- linux-2.6.25/net/netfilter/xt_layer7.c	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.25-layer7/net/netfilter/xt_layer7.c	2008-04-29 00:40:01.000000000 -0500
-@@ -0,0 +1,634 @@
+--- linux-2.6.28-stock/net/netfilter/xt_layer7.c	1969-12-31 18:00:00.000000000 -0600
++++ linux-2.6.28/net/netfilter/xt_layer7.c	2009-01-07 20:47:14.000000000 -0600
+@@ -0,0 +1,666 @@
 +/*
 +  Kernel module to match application layer (OSI layer 7) data in connections.
 +
 +  http://l7-filter.sf.net
 +
-+  (C) 2003, 2004, 2005, 2006, 2007 Matthew Strait and Ethan Sommer.
++  (C) 2003-2009 Matthew Strait and Ethan Sommer.
 +
 +  This program is free software; you can redistribute it and/or
 +  modify it under the terms of the GNU General Public License
@@ -68,6 +68,10 @@
 +#include <linux/netfilter.h>
 +#include <net/netfilter/nf_conntrack.h>
 +#include <net/netfilter/nf_conntrack_core.h>
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 27)
++#include <net/netfilter/nf_conntrack_extend.h>
++#include <net/netfilter/nf_conntrack_acct.h>
++#endif
 +#include <linux/netfilter/x_tables.h>
 +#include <linux/netfilter/xt_layer7.h>
 +#include <linux/ctype.h>
@@ -79,7 +83,7 @@
 +MODULE_AUTHOR("Matthew Strait <quadong@users.sf.net>, Ethan Sommer <sommere@users.sf.net>");
 +MODULE_DESCRIPTION("iptables application layer match module");
 +MODULE_ALIAS("ipt_layer7");
-+MODULE_VERSION("2.19");
++MODULE_VERSION("2.21");
 +
 +static int maxdatalen = 2048; // this is the default
 +module_param(maxdatalen, int, 0444);
@@ -89,9 +93,6 @@
 +#else
 +	#define DPRINTK(format,args...)
 +#endif
-+
-+#define TOTAL_PACKETS master_conntrack->counters[IP_CT_DIR_ORIGINAL].packets + \
-+		      master_conntrack->counters[IP_CT_DIR_REPLY].packets
 +
 +/* Number of packets whose data we look at.
 +This can be modified through /proc/net/layer7_numpackets */
@@ -104,6 +105,22 @@
 +} * first_pattern_cache = NULL;
 +
 +DEFINE_SPINLOCK(l7_lock);
++
++static int total_acct_packets(struct nf_conn *ct)
++{
++#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 26)
++	BUG_ON(ct == NULL);
++	return (ct->counters[IP_CT_DIR_ORIGINAL].packets + ct->counters[IP_CT_DIR_REPLY].packets);
++#else
++	struct nf_conn_counter *acct;
++
++	BUG_ON(ct == NULL);
++	acct = nf_conn_acct_find(ct);
++	if (!acct)
++		return 0;
++	return (acct[IP_CT_DIR_ORIGINAL].packets + acct[IP_CT_DIR_REPLY].packets);
++#endif
++}
 +
 +#ifdef CONFIG_IP_NF_MATCH_LAYER7_DEBUG
 +/* Converts an unfriendly string into a friendly one by
@@ -292,7 +309,7 @@
 +			  hex_print(master_conntrack->layer7.app_data);
 +			DPRINTK("\nl7-filter gave up after %d bytes "
 +				"(%d packets):\n%s\n",
-+				strlen(f), TOTAL_PACKETS, f);
++				strlen(f), total_acct_packets(master_conntrack), f);
 +			kfree(f);
 +			DPRINTK("In hex: %s\n", g);
 +			kfree(g);
@@ -438,7 +455,10 @@
 +	return count;
 +}
 +
-+static int
++static bool
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 28)
++match(const struct sk_buff *skbin, const struct xt_match_param *par)
++#else
 +match(const struct sk_buff *skbin,
 +      const struct net_device *in,
 +      const struct net_device *out,
@@ -446,12 +466,19 @@
 +      const void *matchinfo,
 +      int offset,
 +      unsigned int protoff,
-+      int *hotdrop)
++      bool *hotdrop)
++#endif
 +{
 +	/* sidestep const without getting a compiler warning... */
 +	struct sk_buff * skb = (struct sk_buff *)skbin; 
 +
-+	const struct xt_layer7_info * info = matchinfo;
++	const struct xt_layer7_info * info = 
++	#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 28)
++		par->matchinfo;
++	#else
++		matchinfo;
++	#endif
++
 +	enum ip_conntrack_info master_ctinfo, ctinfo;
 +	struct nf_conn *master_conntrack, *conntrack;
 +	unsigned char * app_data;
@@ -482,7 +509,7 @@
 +		master_conntrack = master_ct(master_conntrack);
 +
 +	/* if we've classified it or seen too many packets */
-+	if(TOTAL_PACKETS > num_packets ||
++	if(total_acct_packets(master_conntrack) > num_packets ||
 +	   master_conntrack->layer7.app_proto) {
 +
 +		pattern_result = match_no_append(conntrack, master_conntrack, 
@@ -517,7 +544,7 @@
 +	comppattern = compile_and_cache(info->pattern, info->protocol);
 +
 +	/* On the first packet of a connection, allocate space for app data */
-+	if(TOTAL_PACKETS == 1 && !skb->cb[0] && 
++	if(total_acct_packets(master_conntrack) == 1 && !skb->cb[0] && 
 +	   !master_conntrack->layer7.app_data){
 +		master_conntrack->layer7.app_data = 
 +			kmalloc(maxdatalen, GFP_ATOMIC);
@@ -536,7 +563,7 @@
 +	the beginning of a connection */
 +	if(master_conntrack->layer7.app_data == NULL){
 +		spin_unlock_bh(&l7_lock);
-+		return (info->invert); /* unmatched */
++		return info->invert; /* unmatched */
 +	}
 +
 +	if(!skb->cb[0]){
@@ -560,7 +587,8 @@
 +	} else if(!strcmp(info->protocol, "unset")) {
 +		pattern_result = 2;
 +		DPRINTK("layer7: matched unset: not yet classified "
-+			"(%d/%d packets)\n", TOTAL_PACKETS, num_packets);
++			"(%d/%d packets)\n",
++                        total_acct_packets(master_conntrack), num_packets);
 +	/* If the regexp failed to compile, don't bother running it */
 +	} else if(comppattern && 
 +		  regexec(comppattern, master_conntrack->layer7.app_data)){
@@ -590,29 +618,41 @@
 +	return (pattern_result ^ info->invert);
 +}
 +
-+static int check(const char *tablename,
-+		 const void *inf,
-+		 const struct xt_match *match,
-+		 void *matchinfo,
-+		 unsigned int hook_mask)
-+
++// load nf_conntrack_ipv4
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 28)
++static bool check(const struct xt_mtchk_param *par)
 +{
-+	// load nf_conntrack_ipv4
++        if (nf_ct_l3proto_try_module_get(par->match->family) < 0) {
++                printk(KERN_WARNING "can't load conntrack support for "
++                                    "proto=%d\n", par->match->family);
++#else
++static bool check(const char *tablename, const void *inf,
++		 const struct xt_match *match, void *matchinfo,
++		 unsigned int hook_mask)
++{
 +        if (nf_ct_l3proto_try_module_get(match->family) < 0) {
 +                printk(KERN_WARNING "can't load conntrack support for "
 +                                    "proto=%d\n", match->family);
++#endif
 +                return 0;
 +        }
 +	return 1;
 +}
 +
-+static void
-+destroy(const struct xt_match *match, void *matchinfo)
-+{
-+	nf_ct_l3proto_module_put(match->family);
-+}
 +
-+static struct xt_match xt_layer7_match[] = {
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 28)
++	static void destroy(const struct xt_mtdtor_param *par)
++	{
++		nf_ct_l3proto_module_put(par->match->family);
++	}
++#else
++	static void destroy(const struct xt_match *match, void *matchinfo)
++	{
++		nf_ct_l3proto_module_put(match->family);
++	}
++#endif
++
++static struct xt_match xt_layer7_match[] __read_mostly = {
 +{
 +	.name		= "layer7",
 +	.family		= AF_INET,
@@ -626,22 +666,14 @@
 +
 +static void layer7_cleanup_proc(void)
 +{
-+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,23)
-+	remove_proc_entry("layer7_numpackets", proc_net);
-+#else
 +	remove_proc_entry("layer7_numpackets", init_net.proc_net);
-+#endif
 +}
 +
 +/* register the proc file */
 +static void layer7_init_proc(void)
 +{
 +	struct proc_dir_entry* entry;
-+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,23)
-+	entry = create_proc_entry("layer7_numpackets", 0644, proc_net);
-+#else
 +	entry = create_proc_entry("layer7_numpackets", 0644, init_net.proc_net);
-+#endif
 +	entry->read_proc = layer7_read_proc;
 +	entry->write_proc = layer7_write_proc;
 +}
@@ -675,8 +707,8 @@
 +
 +module_init(xt_layer7_init);
 +module_exit(xt_layer7_fini);
---- linux-2.6.25/net/netfilter/regexp/regexp.c	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.25-layer7/net/netfilter/regexp/regexp.c	2008-04-29 00:40:01.000000000 -0500
+--- linux-2.6.28-stock/net/netfilter/regexp/regexp.c	1969-12-31 18:00:00.000000000 -0600
++++ linux-2.6.28/net/netfilter/regexp/regexp.c	2009-01-07 16:07:31.000000000 -0600
 @@ -0,0 +1,1197 @@
 +/*
 + * regcomp and regexec -- regsub and regerror are elsewhere
@@ -1875,8 +1907,8 @@
 +#endif
 +
 +
---- linux-2.6.25/net/netfilter/regexp/regexp.h	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.25-layer7/net/netfilter/regexp/regexp.h	2008-04-29 00:40:01.000000000 -0500
+--- linux-2.6.28-stock/net/netfilter/regexp/regexp.h	1969-12-31 18:00:00.000000000 -0600
++++ linux-2.6.28/net/netfilter/regexp/regexp.h	2009-01-07 16:07:31.000000000 -0600
 @@ -0,0 +1,41 @@
 +/*
 + * Definitions etc. for regexp(3) routines.
@@ -1919,16 +1951,16 @@
 +void regerror(char *s);
 +
 +#endif
---- linux-2.6.25/net/netfilter/regexp/regmagic.h	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.25-layer7/net/netfilter/regexp/regmagic.h	2008-04-29 00:40:01.000000000 -0500
+--- linux-2.6.28-stock/net/netfilter/regexp/regmagic.h	1969-12-31 18:00:00.000000000 -0600
++++ linux-2.6.28/net/netfilter/regexp/regmagic.h	2009-01-07 16:07:31.000000000 -0600
 @@ -0,0 +1,5 @@
 +/*
 + * The first byte of the regexp internal "program" is actually this magic
 + * number; the start node begins in the second byte.
 + */
 +#define	MAGIC	0234
---- linux-2.6.25/net/netfilter/regexp/regsub.c	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.25-layer7/net/netfilter/regexp/regsub.c	2008-04-29 00:40:01.000000000 -0500
+--- linux-2.6.28-stock/net/netfilter/regexp/regsub.c	1969-12-31 18:00:00.000000000 -0600
++++ linux-2.6.28/net/netfilter/regexp/regsub.c	2009-01-07 16:07:31.000000000 -0600
 @@ -0,0 +1,95 @@
 +/*
 + * regsub
@@ -2025,9 +2057,9 @@
 +	}
 +	*dst++ = '\0';
 +}
---- linux-2.6.25/net/netfilter/nf_conntrack_core.c	2008-04-16 21:49:44.000000000 -0500
-+++ linux-2.6.25-layer7/net/netfilter/nf_conntrack_core.c	2008-04-29 00:40:01.000000000 -0500
-@@ -210,6 +210,14 @@ destroy_conntrack(struct nf_conntrack *n
+--- linux-2.6.28-stock/net/netfilter/nf_conntrack_core.c	2009-01-07 16:05:35.000000000 -0600
++++ linux-2.6.28/net/netfilter/nf_conntrack_core.c	2009-01-07 16:07:31.000000000 -0600
+@@ -201,6 +201,14 @@ destroy_conntrack(struct nf_conntrack *n
  	 * too. */
  	nf_ct_remove_expectations(ct);
  
@@ -2042,9 +2074,9 @@
  	/* We overload first tuple to link into unconfirmed list. */
  	if (!nf_ct_is_confirmed(ct)) {
  		BUG_ON(hlist_unhashed(&ct->tuplehash[IP_CT_DIR_ORIGINAL].hnode));
---- linux-2.6.25/net/netfilter/nf_conntrack_standalone.c	2008-04-16 21:49:44.000000000 -0500
-+++ linux-2.6.25-layer7/net/netfilter/nf_conntrack_standalone.c	2008-04-29 00:43:17.000000000 -0500
-@@ -181,6 +181,12 @@ static int ct_seq_show(struct seq_file *
+--- linux-2.6.28-stock/net/netfilter/nf_conntrack_standalone.c	2009-01-07 16:05:35.000000000 -0600
++++ linux-2.6.28/net/netfilter/nf_conntrack_standalone.c	2009-01-07 16:07:31.000000000 -0600
+@@ -165,6 +165,12 @@ static int ct_seq_show(struct seq_file *
  		return -ENOSPC;
  #endif
  
@@ -2057,9 +2089,9 @@
  	if (seq_printf(s, "use=%u\n", atomic_read(&ct->ct_general.use)))
  		return -ENOSPC;
  
---- linux-2.6.25/include/net/netfilter/nf_conntrack.h	2008-04-16 21:49:44.000000000 -0500
-+++ linux-2.6.25-layer7/include/net/netfilter/nf_conntrack.h	2008-04-29 00:40:01.000000000 -0500
-@@ -124,6 +124,22 @@ struct nf_conn
+--- linux-2.6.28-stock/include/net/netfilter/nf_conntrack.h	2009-01-07 16:05:30.000000000 -0600
++++ linux-2.6.28/include/net/netfilter/nf_conntrack.h	2009-01-07 16:07:31.000000000 -0600
+@@ -118,6 +118,22 @@ struct nf_conn
  	u_int32_t secmark;
  #endif
  
@@ -2082,8 +2114,8 @@
  	/* Storage reserved for other modules: */
  	union nf_conntrack_proto proto;
  
---- linux-2.6.25/include/linux/netfilter/xt_layer7.h	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.25-layer7/include/linux/netfilter/xt_layer7.h	2008-04-29 00:40:01.000000000 -0500
+--- linux-2.6.28-stock/include/linux/netfilter/xt_layer7.h	1969-12-31 18:00:00.000000000 -0600
++++ linux-2.6.28/include/linux/netfilter/xt_layer7.h	2009-01-07 16:07:31.000000000 -0600
 @@ -0,0 +1,13 @@
 +#ifndef _XT_LAYER7_H
 +#define _XT_LAYER7_H

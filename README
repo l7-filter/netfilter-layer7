@@ -4,21 +4,21 @@ http://l7-filter.sf.net/README     http://l7-filter.sf.net/HOWTO-kernel
 http://l7-filter.sf.net/protocols
 
 Mailing list: <l7-filter-developers AT lists. sf. net>
-Or if you're shy: Matthew Strait <quadong AT users .sf .net>
+Or if you're shy: Matthew Strait <quadong AT users d0t sf [dot] net>
 
 In this directory you will find:
 
 ***** kernel patches *****
 
-- kernel-2.6.25-layer7-2.20.patch
+- kernel-2.6.25-2.6.28-layer7-2.21.patch
 
-  This patch is against 2.6.25. It will not work with 2.6.24.x or earlier.
+  This patch is against 2.6.28. It will not work with 2.6.24.x or earlier.
   Hopefully, it works with future kernel versions (obviously we don't know yet).
   This package will NOT be updated just because a new kernel is released.
   Check http://l7-filter.sourceforge.net/kernelcompat for up-to-date 
   compatibility information.
 
-- kernel-2.4-layer7-2.20.patch
+- kernel-2.4-layer7-2.21.patch
 
   This patch is against 2.4.31. It is extremely likely that it will work with
   all future 2.4 versions.  If you have some bizzare reason to use an older
