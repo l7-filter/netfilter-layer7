@@ -1528,7 +1528,7 @@ diff -Nurp linux-2.6.21.1-stock/net/netfilter/xt_layer7.c linux-2.6.21.1-layer7/
 +MODULE_AUTHOR("Matthew Strait <quadong@users.sf.net>, Ethan Sommer <sommere@users.sf.net>");
 +MODULE_DESCRIPTION("iptables application layer match module");
 +MODULE_ALIAS("ipt_layer7");
-+MODULE_VERSION("2.0");
++MODULE_VERSION("2.16.1");
 +
 +static int maxdatalen = 2048; // this is the default
 +module_param(maxdatalen, int, 0444);

@@ -1,3 +1,8 @@
+v2.19 - Update iptables patch for iptables 1.4.1.1.  Note that iptables 
+now uses a different compile procedure.  Corrected MODULE_VERSION 
+numbers on all kernel patches.
+
+
 v2.18 - Updated 2.6 patch for 2.6.25.  Removed a stray "asdf" from 
 2.6.22-2.6.24 patch.
 

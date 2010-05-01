@@ -152,7 +152,7 @@
 +MODULE_AUTHOR("Matthew Strait <quadong@users.sf.net>, Ethan Sommer <sommere@users.sf.net>");
 +MODULE_LICENSE("GPL");
 +MODULE_DESCRIPTION("iptables application layer match module");
-+MODULE_VERSION("2.0");
++MODULE_VERSION("2.2");
 +
 +static int maxdatalen = 2048; // this is the default
 +module_param(maxdatalen, int, 0444);
