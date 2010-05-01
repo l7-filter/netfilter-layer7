@@ -1,4 +1,9 @@
+v2.7 - In 2.6 version, ipt_layer7 now automatically loads ip_conntrack. 
+No changes to 2.4 version or iptables.  Updated documentation slightly.
+
+
 v2.6 - No functional changes, just changed one line to conform to 2.6.18.
+
 
 v2.5 - Changes to iptables only
 
@@ -7,10 +12,12 @@ protocol files.  This allows, for instance, "http " or "http I am the
 coolest!!!" instead of just "http" in http.pat.  Pattern writers should
 stay conservative in what they send, however.
 
+
 v2.4.1
 
 - I had accidentally overwritten the 2.4 patch with a newer version of the
 2.6 patch.  Oops!  It is now restored.
+
 
 v2.4 - Changes to 2.6 version only
 

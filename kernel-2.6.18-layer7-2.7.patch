@@ -115,8 +115,8 @@
  		return -ENOSPC;
  
 --- linux-2.6.18/net/ipv4/netfilter/ipt_layer7.c	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.18-layer7/net/ipv4/netfilter/ipt_layer7.c	2006-09-24 10:59:55.000000000 -0500
-@@ -0,0 +1,582 @@
++++ linux-2.6.18-layer7/net/ipv4/netfilter/ipt_layer7.c	2006-12-12 22:45:48.000000000 -0600
+@@ -0,0 +1,584 @@
 +/*
 +  Kernel module to match application layer (OSI layer 7)
 +  data in connections.
@@ -677,6 +677,8 @@
 +
 +static int __init ipt_layer7_init(void)
 +{
++	need_conntrack();
++
 +	layer7_init_proc();
 +	if(maxdatalen < 1) {
 +		printk(KERN_WARNING "layer7: maxdatalen can't be < 1, using 1\n");
