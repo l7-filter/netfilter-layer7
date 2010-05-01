@@ -1,7 +1,7 @@
-diff -Naur linux-2.6.2-stock/include/linux/netfilter_ipv4/ip_conntrack.h linux-2.6.2-layer7/include/linux/netfilter_ipv4/ip_conntrack.h
+diff -Nurp -X dontdiff linux-2.6.2-stock/include/linux/netfilter_ipv4/ip_conntrack.h linux-2.6.2-layer7/include/linux/netfilter_ipv4/ip_conntrack.h
 --- linux-2.6.2-stock/include/linux/netfilter_ipv4/ip_conntrack.h	2004-02-15 19:51:48.000000000 -0600
 +++ linux-2.6.2-layer7/include/linux/netfilter_ipv4/ip_conntrack.h	2004-02-16 09:08:41.000000000 -0600
-@@ -206,6 +206,14 @@
+@@ -206,6 +206,14 @@ struct ip_conntrack
  	} nat;
  #endif /* CONFIG_IP_NF_NAT_NEEDED */
  
@@ -16,7 +16,7 @@ diff -Naur linux-2.6.2-stock/include/linux/netfilter_ipv4/ip_conntrack.h linux-2
  };
  
  /* get master conntrack via master expectation */
-diff -Naur linux-2.6.2-stock/include/linux/netfilter_ipv4/ipt_layer7.h linux-2.6.2-layer7/include/linux/netfilter_ipv4/ipt_layer7.h
+diff -Nurp -X dontdiff linux-2.6.2-stock/include/linux/netfilter_ipv4/ipt_layer7.h linux-2.6.2-layer7/include/linux/netfilter_ipv4/ipt_layer7.h
 --- linux-2.6.2-stock/include/linux/netfilter_ipv4/ipt_layer7.h	1969-12-31 18:00:00.000000000 -0600
 +++ linux-2.6.2-layer7/include/linux/netfilter_ipv4/ipt_layer7.h	2004-02-16 09:09:44.000000000 -0600
 @@ -0,0 +1,26 @@
@@ -46,10 +46,10 @@ diff -Naur linux-2.6.2-stock/include/linux/netfilter_ipv4/ipt_layer7.h linux-2.6
 +};
 +
 +#endif /* _IPT_LAYER7_H */
-diff -Naur linux-2.6.2-stock/net/ipv4/netfilter/Kconfig linux-2.6.2-layer7/net/ipv4/netfilter/Kconfig
+diff -Nurp -X dontdiff linux-2.6.2-stock/net/ipv4/netfilter/Kconfig linux-2.6.2-layer7/net/ipv4/netfilter/Kconfig
 --- linux-2.6.2-stock/net/ipv4/netfilter/Kconfig	2004-02-15 19:52:12.000000000 -0600
 +++ linux-2.6.2-layer7/net/ipv4/netfilter/Kconfig	2004-02-15 20:45:53.000000000 -0600
-@@ -6,7 +6,7 @@
+@@ -6,7 +6,7 @@ menu "IP: Netfilter Configuration"
  	depends on INET && NETFILTER
  
  config IP_NF_CONNTRACK
@@ -58,7 +58,7 @@ diff -Naur linux-2.6.2-stock/net/ipv4/netfilter/Kconfig linux-2.6.2-layer7/net/i
  	---help---
  	  Connection tracking keeps a record of what packets have passed
  	  through your machine, in order to figure out how they are related
-@@ -115,6 +115,23 @@
+@@ -115,6 +115,23 @@ config IP_NF_MATCH_MAC
  
  	  To compile it as a module, choose M here.  If unsure, say N.
  
@@ -82,10 +82,10 @@ diff -Naur linux-2.6.2-stock/net/ipv4/netfilter/Kconfig linux-2.6.2-layer7/net/i
  config IP_NF_MATCH_PKTTYPE
  	tristate "Packet type match support"
  	depends on IP_NF_IPTABLES
-diff -Naur linux-2.6.2-stock/net/ipv4/netfilter/Makefile linux-2.6.2-layer7/net/ipv4/netfilter/Makefile
+diff -Nurp -X dontdiff linux-2.6.2-stock/net/ipv4/netfilter/Makefile linux-2.6.2-layer7/net/ipv4/netfilter/Makefile
 --- linux-2.6.2-stock/net/ipv4/netfilter/Makefile	2004-02-15 19:52:12.000000000 -0600
 +++ linux-2.6.2-layer7/net/ipv4/netfilter/Makefile	2004-02-15 20:45:43.000000000 -0600
-@@ -66,6 +66,8 @@
+@@ -66,6 +66,8 @@ obj-$(CONFIG_IP_NF_MATCH_TCPMSS) += ipt_
  
  obj-$(CONFIG_IP_NF_MATCH_PHYSDEV) += ipt_physdev.o
  
@@ -94,10 +94,10 @@ diff -Naur linux-2.6.2-stock/net/ipv4/netfilter/Makefile linux-2.6.2-layer7/net/
  # targets
  obj-$(CONFIG_IP_NF_TARGET_REJECT) += ipt_REJECT.o
  obj-$(CONFIG_IP_NF_TARGET_TOS) += ipt_TOS.o
-diff -Naur linux-2.6.2-stock/net/ipv4/netfilter/ip_conntrack_core.c linux-2.6.2-layer7/net/ipv4/netfilter/ip_conntrack_core.c
+diff -Nurp -X dontdiff linux-2.6.2-stock/net/ipv4/netfilter/ip_conntrack_core.c linux-2.6.2-layer7/net/ipv4/netfilter/ip_conntrack_core.c
 --- linux-2.6.2-stock/net/ipv4/netfilter/ip_conntrack_core.c	2004-02-15 19:52:11.000000000 -0600
 +++ linux-2.6.2-layer7/net/ipv4/netfilter/ip_conntrack_core.c	2004-02-15 21:24:16.000000000 -0600
-@@ -332,6 +332,16 @@
+@@ -332,6 +332,16 @@ destroy_conntrack(struct nf_conntrack *n
  		}
  		kfree(ct->master);
  	}
@@ -114,10 +114,10 @@ diff -Naur linux-2.6.2-stock/net/ipv4/netfilter/ip_conntrack_core.c linux-2.6.2-
  	WRITE_UNLOCK(&ip_conntrack_lock);
  
  	if (master)
-diff -Naur linux-2.6.2-stock/net/ipv4/netfilter/ip_conntrack_standalone.c linux-2.6.2-layer7/net/ipv4/netfilter/ip_conntrack_standalone.c
+diff -Nurp -X dontdiff linux-2.6.2-stock/net/ipv4/netfilter/ip_conntrack_standalone.c linux-2.6.2-layer7/net/ipv4/netfilter/ip_conntrack_standalone.c
 --- linux-2.6.2-stock/net/ipv4/netfilter/ip_conntrack_standalone.c	2004-02-15 19:52:12.000000000 -0600
 +++ linux-2.6.2-layer7/net/ipv4/netfilter/ip_conntrack_standalone.c	2004-02-15 21:22:41.000000000 -0600
-@@ -105,6 +105,13 @@
+@@ -105,6 +105,13 @@ print_conntrack(char *buffer, struct ip_
  		len += sprintf(buffer + len, "[ASSURED] ");
  	len += sprintf(buffer + len, "use=%u ",
  		       atomic_read(&conntrack->ct_general.use));
@@ -131,10 +131,10 @@ diff -Naur linux-2.6.2-stock/net/ipv4/netfilter/ip_conntrack_standalone.c linux-
  	len += sprintf(buffer + len, "\n");
  
  	return len;
-diff -Naur linux-2.6.2-stock/net/ipv4/netfilter/ipt_layer7.c linux-2.6.2-layer7/net/ipv4/netfilter/ipt_layer7.c
+diff -Nurp -X dontdiff linux-2.6.2-stock/net/ipv4/netfilter/ipt_layer7.c linux-2.6.2-layer7/net/ipv4/netfilter/ipt_layer7.c
 --- linux-2.6.2-stock/net/ipv4/netfilter/ipt_layer7.c	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.2-layer7/net/ipv4/netfilter/ipt_layer7.c	2004-02-16 09:18:38.000000000 -0600
-@@ -0,0 +1,406 @@
++++ linux-2.6.2-layer7/net/ipv4/netfilter/ipt_layer7.c	2004-02-17 16:15:01.000000000 -0600
+@@ -0,0 +1,449 @@
 +/* 
 +  Kernel module to match application layer (OSI layer 7) 
 +  data in connections.
@@ -176,13 +176,35 @@ diff -Naur linux-2.6.2-stock/net/ipv4/netfilter/ipt_layer7.c linux-2.6.2-layer7/
 +  #define DPRINTK(format,args...)
 +#endif
 +
-+#define MAXDATALENGTH 2048
++#define MAXDATALEN 2048
++
++/* Number of packets whose data we look at.
++This can be modified through /proc/net/layer7_numpackets */
++static int num_packets = 8;
 +
 +static struct pattern_cache {
 +  char * regex_string;
 +  regexp * pattern;
 +  struct pattern_cache * next;
 +} * first_pattern_cache = NULL;
++
++/* I'm a novice on this locking thing.  Here are my assumptions (which might 
++be wrong):
++
++- No one is going to try to write to /proc/net/layer7_numpackets over and over
++  within a short period of time, and if they did, nothing awful would happen.
++
++- This code will never be processing the same packet twice at the same time,
++  because iptables rules need to be traversed in order.
++
++- It doesn't matter if two packets from different connections are in here at 
++  the same time, because they don't share any data.
++
++- It _does_ matter if two packets from the same connection are here at the same
++  time.  In this case, the things we have to protect are the conntracks and
++  the list of compiled patterns.
++*/
++static spinlock_t l7_lock = SPIN_LOCK_UNLOCKED;
 +
 +/* Use instead of regcomp.  As we expect to be seeing the same regexps over and
 +over again, it make sense to cache the results. */
@@ -202,9 +224,9 @@ diff -Naur linux-2.6.2-stock/net/ipv4/netfilter/ipt_layer7.c linux-2.6.2-layer7/
 +
 +        /* If we reach the end of the list, then we have not yet cached
 +           the pattern for this regex. Let's do that now. */
-+        node                = kmalloc(sizeof(struct pattern_cache), GFP_KERNEL);
-+        node->regex_string  = kmalloc(strlen(regex_string) + 1,     GFP_KERNEL);
-+        node->pattern       = kmalloc(sizeof(struct regexp),        GFP_KERNEL);
++        node                = kmalloc(sizeof(struct pattern_cache), GFP_ATOMIC);
++        node->regex_string  = kmalloc(strlen(regex_string) + 1,     GFP_ATOMIC);
++        node->pattern       = kmalloc(sizeof(struct regexp),        GFP_ATOMIC);
 +        node->next          = NULL;
 +
 +        if(first_pattern_cache == NULL) /* list is empty */
@@ -226,18 +248,15 @@ diff -Naur linux-2.6.2-stock/net/ipv4/netfilter/ipt_layer7.c linux-2.6.2-layer7/
 +
 +#if CONFIG_IP_NF_MATCH_LAYER7_DEBUG
 +/* For printing.  Converts an unfriendly string into a friendly one by replacing 
-+unprintables with periods. */
++unprintables with periods and all whitespace with " ". */
 +static char * friendly_print(unsigned char * s)
 +{
-+	char * f = kmalloc(strlen(s) + 1, GFP_KERNEL);
++	char * f = kmalloc(strlen(s) + 1, GFP_ATOMIC);
 +	int i;
 +	for(i = 0; i < strlen(s); i++){
-+		if(isprint(s[i]) && s[i] < 128)
-+			f[i] = s[i];
-+		else if(isspace(s[i]))
-+			f[i] = ' ';
-+		else
-+			f[i] = '.';
++		if(isprint(s[i]) && s[i] < 128)	f[i] = s[i];
++		else if(isspace(s[i]))		f[i] = ' ';
++		else 				f[i] = '.';
 +	}
 +	f[i] = '\0';
 +	return f;
@@ -271,7 +290,7 @@ diff -Naur linux-2.6.2-stock/net/ipv4/netfilter/ipt_layer7.c linux-2.6.2-layer7/
 +	{	return(skb->data[IP_PROTO_OFFSET] == IPPROTO_ICMP); }
 +#endif
 +
-+/* Returns the number of bytes into the skb->data that the application data starts. */
++/* Returns offset the into the skb->data that the application data starts */
 +static int app_data_offset(const struct sk_buff *skb)
 +{
 +	/* In case we are ported somewhere (ebtables?) where skb->nh.iph 
@@ -279,9 +298,10 @@ diff -Naur linux-2.6.2-stock/net/ipv4/netfilter/ipt_layer7.c linux-2.6.2-layer7/
 +        int ip_hl = 4*skb->nh.iph->ihl;
 +
 +        if( skb->nh.iph->protocol == IPPROTO_TCP ) {
-+                /* 12 == offset into TCP header for the header length field. We can't get this
-+                with skb->h.th->doff because the tcphdr struct doesn't get set when routing 
-+		(this is confirmed to be true in Netfilter as well as QoS.) */
++                /* 12 == offset into TCP header for the header length field. 
++		Can't get this with skb->h.th->doff because the tcphdr 
++		struct doesn't get set when routing (this is confirmed to be 
++		true in Netfilter as well as QoS.) */
 +                int tcp_hl = 4*(skb->data[ip_hl + 12] >> 4);
 +
 +                return ip_hl + tcp_hl;
@@ -295,11 +315,69 @@ diff -Naur linux-2.6.2-stock/net/ipv4/netfilter/ipt_layer7.c linux-2.6.2-layer7/
 +        }
 +}
 +
-+/* This can be modified through /proc/net/layer7_numpackets */
-+static int num_packets = 8;
++/* handles whether there's a match when we aren't appending data anymore */
++static int match_no_append(struct ip_conntrack * conntrack, 
++			struct ip_conntrack * master_conntrack,
++			struct ipt_layer7_info * info)
++{
++	/* If we're in here, we don't care about the app data anymore */
++	spin_lock(&l7_lock);
++	if(master_conntrack->layer7.app_data != NULL) {
++		if(!master_conntrack->layer7.app_proto)
++			DPRINTK("\nGave up on the %d length stream: \n%s\n", 
++			master_conntrack->layer7.app_data_len, 
++			friendly_print(master_conntrack->layer7.app_data));
++
++		kfree(master_conntrack->layer7.app_data);
++		master_conntrack->layer7.app_data = NULL; /* don't free again */
++	}
++	spin_unlock(&l7_lock);
++
++	/* Is top-level master (possibly self) classified? */
++	if(master_conntrack->layer7.app_proto) { 
++		if(!strcmp(master_conntrack->layer7.app_proto, info->protocol))
++		{
++		    	/* set own .protocol (for /proc/net/ip_conntrack) */
++			spin_lock(&l7_lock);
++		    	if(!conntrack->layer7.app_proto) {
++		        	conntrack->layer7.app_proto = kmalloc(strlen(info->protocol), GFP_ATOMIC);
++		        	strcpy(conntrack->layer7.app_proto, info->protocol);
++		    	}
++			spin_unlock(&l7_lock);
++	
++		    	return 1;
++		} else return 0;
++	} else return 0; /* no clasification */
++}
++
++/* add the new app data to the conntrack.  Return number of bytes added. */
++static int add_data(struct ip_conntrack * master_conntrack, 
++			char * app_data, int appdatalen)
++{
++	int length = 0, i;
++	int oldlength = master_conntrack->layer7.app_data_len;
++
++	/* Convert the packet into a valid string by stripping nulls. Also make
++	everything lower case (our regex lib doesn't have a case insensitivity
++	option). Add it to the end of the current data. */
++	for(i = 0; i < MAXDATALEN-oldlength-1 && i < appdatalen; i++) {
++		if(app_data[i] != '\0') {
++			master_conntrack->layer7.app_data[length+oldlength] = tolower(app_data[i]);
++			length++;
++		}
++	}
++
++	master_conntrack->layer7.app_data[length+oldlength] = '\0';
++	master_conntrack->layer7.app_data_len = length + oldlength;
++
++	//DPRINTK("%d packets: length %d, content %s\n\n", master_conntrack->layer7.numpackets, 
++	//master_conntrack->layer7.app_data_len, friendly_print(master_conntrack->layer7.app_data));
++
++	return length;
++}
 +
 +/* Returns true on match and false otherwise.  */
-+static int match(/* const */struct sk_buff *skb,          const struct net_device *in,
++static int match(/* const */struct sk_buff *skb, const struct net_device *in,
 +                 const struct net_device *out, const void *matchinfo,
 +                 int offset,                   int *hotdrop)
 +{
@@ -309,13 +387,16 @@ diff -Naur linux-2.6.2-stock/net/ipv4/netfilter/ipt_layer7.c linux-2.6.2-layer7/
 +	unsigned char * app_data;  
 +	unsigned int pattern_result, appdatalen;
 +	regexp * comppattern;
++	static spinlock_t list_lock = SPIN_LOCK_UNLOCKED;
 +
 +	if(!can_handle(skb)){
 +		DPRINTK("layer7: This is some protocol I can't handle\n");
 +		return info->invert;
 +	}
 +
++	spin_lock(&list_lock);
 +	comppattern = compile_and_cache(info->pattern, info->protocol);
++	spin_unlock(&list_lock);
 +
 +	app_data = skb->data + app_data_offset(skb);
 +	appdatalen = skb->tail - app_data;
@@ -334,99 +415,62 @@ diff -Naur linux-2.6.2-stock/net/ipv4/netfilter/ipt_layer7.c linux-2.6.2-layer7/
 +        while (master_ct(master_conntrack) != NULL)
 +                master_conntrack = master_ct(master_conntrack);
 +
-+	/* skb->cb[0] == seen.  Don't want to do things twice if there are
-+	two layer7 rules. */
-+	/* I'm not at all sure that using cb for this purpose is the Right 
-+	Thing, (although it does say "put your private variables there" and 
-+	this would seem to qualify) but it doesn't look like it's being used 
-+	for anything else in the sk_buffs that make it here. */
-+	/* I'm open to suggestions for how to be able to write to cb without 
-+	making the compiler angry.  The fact that I can't figure this out is 
-+	an argument against this being the Right Thing after all. */
-+	if(!skb->cb[0]) 
-+		master_conntrack->layer7.numpackets++; /* starts at 0 via memset */
-+
-+	/* On the first packet of a connection, allocate space for app data */
-+	if(master_conntrack->layer7.numpackets == 1 && !skb->cb[0]) {
-+		master_conntrack->layer7.app_data = kmalloc(MAXDATALENGTH, GFP_KERNEL);
-+		master_conntrack->layer7.app_data[0] = '\0';
++	/* skb->cb[0] == seen. Avoid doing things twice if there are two layer7 
++	rules. I'm not sure that using cb for this purpose is correct, although 
++	it says "put your private variables there" and this seems to qualify.  
++	But it doesn't look like it's being used for anything else in the 
++	sk_buffs that make it here. I'm open to suggestions for how to be able 
++	to write to cb without making the compiler angry.  That I can't figure 
++	this out is an argument against this being correct. */
++	if(!skb->cb[0]){
++		spin_lock(&l7_lock);
++		master_conntrack->layer7.numpackets++;/*starts at 0 via memset*/
++		spin_unlock(&l7_lock);
 +	}
 +
++	/* On the first packet of a connection, allocate space for app data */
++	spin_lock(&l7_lock);
++	if(master_conntrack->layer7.numpackets == 1 && !skb->cb[0]) {
++		master_conntrack->layer7.app_data = kmalloc(MAXDATALEN, GFP_ATOMIC);
++		master_conntrack->layer7.app_data[0] = '\0';
++	}
++	spin_unlock(&l7_lock);
++
 +	/* if we've classified it or seen too many packets */
-+	if(master_conntrack->layer7.numpackets > num_packets || master_conntrack->layer7.app_proto) {
-+		/* If we're in here, we don't care about the app data anymore */
-+		if(master_conntrack->layer7.app_data != NULL) {
-+			if(!master_conntrack->layer7.app_proto)
-+				DPRINTK("\nGave up on the %d length stream: \n%s\n", 
-+					master_conntrack->layer7.app_data_len, 
-+					friendly_print(master_conntrack->layer7.app_data));
-+
-+			kfree(master_conntrack->layer7.app_data);
-+			master_conntrack->layer7.app_data = NULL; /* don't free again */
-+		}
-+
-+		if(master_conntrack->layer7.app_proto) { /* master (possibly self) is classified */
-+			if(!strcmp(master_conntrack->layer7.app_proto, info->protocol))
-+			{
-+			    /* set own ->pattern if not set (for /proc/net/ip_conntrack) */
-+			    if(!conntrack->layer7.app_proto) {
-+			        conntrack->layer7.app_proto = kmalloc(strlen(info->protocol), GFP_KERNEL);
-+			        strcpy(conntrack->layer7.app_proto, info->protocol);
-+			    }
-+			    pattern_result = 1;
-+			} else
-+			    pattern_result = 0;
-+		} else /* no clasification */
-+			pattern_result = 0;
-+
++	if(master_conntrack->layer7.numpackets > num_packets || 
++	   master_conntrack->layer7.app_proto) {
++	
++		pattern_result = match_no_append(conntrack, master_conntrack, info);
++	
 +		/* mark the packet seen (probably irrelevant, but consistant) */
 +		skb->cb[0] = 1;
 +
 +	        return (pattern_result ^ info->invert);
 +	}
 +	
-+	/* Can happen if numpackets is increased during the beginning of a connection */
++	/* Can end up here, but unallocated, if numpackets is increased during 
++	the beginning of a connection */
 +	if(master_conntrack->layer7.app_data == NULL)
 +		return (info->invert); /* unmatched */
 +
-+	/* Convert the packet into a valid string by stripping nulls. Also make
-+	everything lower case (our regex lib doesn't have a case insensitivity
-+	option). Add it to the end of the current data. */
 +	if(!skb->cb[0])	{
-+		int length = 0, i;
-+		int oldlength = master_conntrack->layer7.app_data_len;
++		int newbytes = add_data(master_conntrack, app_data, appdatalen);
 +
-+		for(i = 0; i < MAXDATALENGTH - oldlength - 1 && i < appdatalen; i++) {
-+			if(app_data[i] != '\0') {
-+				master_conntrack->layer7.app_data[length+oldlength] = 
-+					tolower(app_data[i]);
-+				length++;
-+			}
-+		}
-+	
-+		if(length == 0) { /* didn't add any data */
++		if(newbytes == 0) { /* didn't add any data */
 +			skb->cb[0] = 1;
-+			/* if didn't match before, not going to match now */
++			/* Didn't match before, not going to match now */
 +			return info->invert;
 +		}
-+
-+		master_conntrack->layer7.app_data[length+oldlength] = '\0';
-+		master_conntrack->layer7.app_data_len = length + oldlength;
-+
-+		//DPRINTK("%d packets: length %d content %s\n\n", master_conntrack->layer7.numpackets, 
-+		//	master_conntrack->layer7.app_data_len, friendly_print(master_conntrack->layer7.app_data));
 +	}
 +
 +	/* If the regexp failed to compile, don't bother running it */
 +	if(comppattern && regexec(comppattern, master_conntrack->layer7.app_data)) {
 +		DPRINTK("layer7: regexec positive: %s!\n", info->protocol);
 +		pattern_result = 1;
-+	} else {
-+		pattern_result = 0;		
-+	}
++	} else pattern_result = 0;
 +
 +	if(pattern_result) {
-+		conntrack->layer7.app_proto = kmalloc(strlen(info->protocol), GFP_KERNEL);
++		conntrack->layer7.app_proto = kmalloc(strlen(info->protocol), GFP_ATOMIC);
 +		strcpy(conntrack->layer7.app_proto, info->protocol);
 +	}
 +
@@ -436,9 +480,8 @@ diff -Naur linux-2.6.2-stock/net/ipv4/netfilter/ipt_layer7.c linux-2.6.2-layer7/
 +    	return (pattern_result ^ info->invert);
 +}
 +
-+static int
-+checkentry(const char *tablename, const struct ipt_ip *ip,
-+           void *matchinfo,       unsigned int matchsize,   unsigned int hook_mask)
++static int checkentry(const char *tablename, const struct ipt_ip *ip,
++           void *matchinfo, unsigned int matchsize, unsigned int hook_mask)
 +{
 +       if (matchsize != IPT_ALIGN(sizeof(struct ipt_layer7_info))) 
 +               return 0;
@@ -489,20 +532,20 @@ diff -Naur linux-2.6.2-stock/net/ipv4/netfilter/ipt_layer7.c linux-2.6.2-layer7/
 +static int layer7_write_proc(struct file* file, const char* buffer, 
 +                      unsigned long count, void *data) 
 +{
-+        char * foo = (char *) kmalloc(3*sizeof(char), GFP_KERNEL);
++        char * foo = (char *) kmalloc(3*sizeof(char), GFP_ATOMIC);
 +
 +        /* copy in the data from userland */
 +        copy_from_user(foo, buffer, count);
 +
 +        num_packets = my_atoi(foo);
 +
-+        /* This is totally arbitrary in order to make the math easier. I'm lazy.  
++        /* This has an arbitrary limit to make the math easier. I'm lazy. 
 +	But anyway, 99 is a LOT! If you want more, you're doing it wrong! */
 +        if(num_packets > 99) {
-+                printk(KERN_WARNING "layer7: num_packets can't be > 99. Setting to 99.\n");
++                printk(KERN_WARNING "layer7: num_packets can't be > 99.\n");
 +                num_packets = 99;
 +        } else if(num_packets < 1) {
-+                printk(KERN_WARNING "layer7: num_packets can't be < 1. Setting to 1.\n");
++                printk(KERN_WARNING "layer7: num_packets can't be < 1.\n");
 +                num_packets = 1;
 +        }
 +
@@ -541,7 +584,7 @@ diff -Naur linux-2.6.2-stock/net/ipv4/netfilter/ipt_layer7.c linux-2.6.2-layer7/
 +
 +module_init(init);
 +module_exit(fini);
-diff -Naur linux-2.6.2-stock/net/ipv4/netfilter/regexp/regerror.c linux-2.6.2-layer7/net/ipv4/netfilter/regexp/regerror.c
+diff -Nurp -X dontdiff linux-2.6.2-stock/net/ipv4/netfilter/regexp/regerror.c linux-2.6.2-layer7/net/ipv4/netfilter/regexp/regerror.c
 --- linux-2.6.2-stock/net/ipv4/netfilter/regexp/regerror.c	1969-12-31 18:00:00.000000000 -0600
 +++ linux-2.6.2-layer7/net/ipv4/netfilter/regexp/regerror.c	2004-02-12 12:10:04.000000000 -0600
 @@ -0,0 +1,7 @@
@@ -552,9 +595,9 @@ diff -Naur linux-2.6.2-stock/net/ipv4/netfilter/regexp/regerror.c linux-2.6.2-la
 +	/* NOTREACHED */
 +}
 +#endif
-diff -Naur linux-2.6.2-stock/net/ipv4/netfilter/regexp/regexp.c linux-2.6.2-layer7/net/ipv4/netfilter/regexp/regexp.c
+diff -Nurp -X dontdiff linux-2.6.2-stock/net/ipv4/netfilter/regexp/regexp.c linux-2.6.2-layer7/net/ipv4/netfilter/regexp/regexp.c
 --- linux-2.6.2-stock/net/ipv4/netfilter/regexp/regexp.c	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.2-layer7/net/ipv4/netfilter/regexp/regexp.c	2004-02-12 12:10:04.000000000 -0600
++++ linux-2.6.2-layer7/net/ipv4/netfilter/regexp/regexp.c	2004-02-17 12:26:11.000000000 -0600
 @@ -0,0 +1,1251 @@
 +/*
 + * regcomp and regexec -- regsub and regerror are elsewhere
@@ -601,7 +644,7 @@ diff -Naur linux-2.6.2-stock/net/ipv4/netfilter/regexp/regexp.c linux-2.6.2-laye
 +/* added by ethan and matt.  Lets it work in both kernel and user space.
 +(So iptables can use it, for instance.)  Yea, it goes both ways... */
 +#if __KERNEL__
-+  #define malloc(foo) kmalloc(foo,GFP_KERNEL)
++  #define malloc(foo) kmalloc(foo,GFP_ATOMIC)
 +#else
 +  #define printk(format,args...) printf(format,##args)
 +#endif
@@ -1807,7 +1850,7 @@ diff -Naur linux-2.6.2-stock/net/ipv4/netfilter/regexp/regexp.c linux-2.6.2-laye
 +}
 +
 +#endif
-diff -Naur linux-2.6.2-stock/net/ipv4/netfilter/regexp/regexp.h linux-2.6.2-layer7/net/ipv4/netfilter/regexp/regexp.h
+diff -Nurp -X dontdiff linux-2.6.2-stock/net/ipv4/netfilter/regexp/regexp.h linux-2.6.2-layer7/net/ipv4/netfilter/regexp/regexp.h
 --- linux-2.6.2-stock/net/ipv4/netfilter/regexp/regexp.h	1969-12-31 18:00:00.000000000 -0600
 +++ linux-2.6.2-layer7/net/ipv4/netfilter/regexp/regexp.h	2004-02-12 12:10:04.000000000 -0600
 @@ -0,0 +1,27 @@
@@ -1838,7 +1881,7 @@ diff -Naur linux-2.6.2-stock/net/ipv4/netfilter/regexp/regexp.h linux-2.6.2-laye
 +void regerror(char *s);
 +
 +#endif
-diff -Naur linux-2.6.2-stock/net/ipv4/netfilter/regexp/regmagic.h linux-2.6.2-layer7/net/ipv4/netfilter/regexp/regmagic.h
+diff -Nurp -X dontdiff linux-2.6.2-stock/net/ipv4/netfilter/regexp/regmagic.h linux-2.6.2-layer7/net/ipv4/netfilter/regexp/regmagic.h
 --- linux-2.6.2-stock/net/ipv4/netfilter/regexp/regmagic.h	1969-12-31 18:00:00.000000000 -0600
 +++ linux-2.6.2-layer7/net/ipv4/netfilter/regexp/regmagic.h	2004-02-12 12:10:04.000000000 -0600
 @@ -0,0 +1,5 @@
@@ -1847,7 +1890,7 @@ diff -Naur linux-2.6.2-stock/net/ipv4/netfilter/regexp/regmagic.h linux-2.6.2-la
 + * number; the start node begins in the second byte.
 + */
 +#define	MAGIC	0234
-diff -Naur linux-2.6.2-stock/net/ipv4/netfilter/regexp/regsub.c linux-2.6.2-layer7/net/ipv4/netfilter/regexp/regsub.c
+diff -Nurp -X dontdiff linux-2.6.2-stock/net/ipv4/netfilter/regexp/regsub.c linux-2.6.2-layer7/net/ipv4/netfilter/regexp/regsub.c
 --- linux-2.6.2-stock/net/ipv4/netfilter/regexp/regsub.c	1969-12-31 18:00:00.000000000 -0600
 +++ linux-2.6.2-layer7/net/ipv4/netfilter/regexp/regsub.c	2004-02-12 12:10:04.000000000 -0600
 @@ -0,0 +1,95 @@
