@@ -1,6 +1,18 @@
+v2.4
+
+- Changed to using Deti Fliegl's match_globals in the regexp code
+for SMP safeness.  (The code as a whole is still probably not SMP safe.)
+
+- Added Deti Fliegl's "if(!master_conntrack->layer7.app_data) return 0;"
+to add_data.
+
+- Removed whitespace at ends of lines to make quilt happy.
+
+
 v2.3 - No functional changes
 
 - Updated patch for 2.6.17.
+
 
 v2.2
 
