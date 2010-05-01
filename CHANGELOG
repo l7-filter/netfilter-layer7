@@ -1,4 +1,7 @@
-v0.5 - Initial release in this format.
+v0.6.1 - Fixed places where netfilter used --l7-proto instead of --l7proto.
 
 v0.6 - Significant kernel code cleanup.  Attempted to make code SMP safe with
 spin_lock() and GFP_ATOMIC.  No change to iptables code.
+
+v0.5 - Initial release in this format.
+

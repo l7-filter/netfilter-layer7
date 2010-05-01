@@ -326,7 +326,7 @@ diff -Naur iptables-1.2.9-stock/extensions/libipt_layer7.c iptables-1.2.9-layer7
 +
 +static void print_protocol(char s[], int invert, int numeric)
 +{
-+	fputs("l7-proto ", stdout);
++	fputs("l7proto ", stdout);
 +	if (invert) fputc('!', stdout);
 +	printf("%s ", s);
 +}
@@ -347,7 +347,7 @@ diff -Naur iptables-1.2.9-stock/extensions/libipt_layer7.c iptables-1.2.9-layer7
 +        const struct ipt_layer7_info *info =
 +            (const struct ipt_layer7_info*) match->data;
 +
-+        printf("--l7-proto %s%s ", (info->invert)   ? "! ": "", info->protocol);
++        printf("--l7proto %s%s ", (info->invert)   ? "! ": "", info->protocol);
 +}
 +
 +static struct iptables_match layer7 = { 
