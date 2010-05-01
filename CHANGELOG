@@ -1,3 +1,7 @@
+v2.3 - No functional changes
+
+- Updated patch for 2.6.17.
+
 v2.2
 
 - Fixed type mismatch in debugging printk.

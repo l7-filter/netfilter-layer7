@@ -7,10 +7,10 @@ In this directory you will find:
 
 ***** kernel patches *****
 
-- a patch for Linux 2.6 called "kernel-2.6.13-2.6.16-layer7-2.2.patch"
+- a patch for Linux 2.6 called "kernel-2.6.17-layer7-2.2.patch"
 
-  This patch is against 2.6.16.14.  It also works with versions back as far
-  as 2.6.13, but won't work with earlier kernels. Hopefully, it works with 
+  This patch is against 2.6.17.6.  It probably works with all 2.6.17.X 
+  kernels, but won't work with earlier kernels. Hopefully, it works with 
   future ones (obviously we don't know yet). For older 2.6 kernels, see the
   "for_older_kernels" directory. Here you will find files named like this:
  
