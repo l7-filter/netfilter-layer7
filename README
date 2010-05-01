@@ -1,17 +1,16 @@
 Please read this file and also:
 
-http://l7-filter.sourceforge.net/README
-http://l7-filter.sf.net/HOWTO-kernel
-http://l7-filter.sourceforge.net/protocols
+http://l7-filter.sf.net/README     http://l7-filter.sf.net/HOWTO-kernel
+http://l7-filter.sf.net/protocols
 
 Mailing list: <l7-filter-developers AT lists. sf. net>
-Or if you're shy: Matthew Strait <quadong AT users . sf .net>
+Or if you're shy: Matthew Strait <quadong AT users .sf .net>
 
 In this directory you will find:
 
 ***** kernel patches *****
 
-- kernel-2.6.25-layer7-2.19.patch
+- kernel-2.6.25-layer7-2.20.patch
 
   This patch is against 2.6.25. It will not work with 2.6.24.x or earlier.
   Hopefully, it works with future kernel versions (obviously we don't know yet).
@@ -19,7 +18,7 @@ In this directory you will find:
   Check http://l7-filter.sourceforge.net/kernelcompat for up-to-date 
   compatibility information.
 
-- kernel-2.4-layer7-2.19.patch
+- kernel-2.4-layer7-2.20.patch
 
   This patch is against 2.4.31. It is extremely likely that it will work with
   all future 2.4 versions.  If you have some bizzare reason to use an older
@@ -27,39 +26,42 @@ In this directory you will find:
 
 - for_older_kernels/
 
-  Here you will find files named
+  Here are files named
   "kernel-[kernel version range]-layer7-[l7-filter-version].patch".
 
   Use the one that matches your kernel version. If the l7-filter version
   is not the latest, then it may be missing some newer features. See CHANGELOG.
 
-***** iptables patches *****
+***** iptables patches/files *****
 
-- iptables-1.3-for-kernel-pre2.6.20-layer7-[l7-filter version].patch
+- iptables-1.4.1.1-for-kernel-2.6.20forward/libxt_layer7.{c,man}
 
-  Use this patch if you are compiling iptables 1.3.x against Linux 2.6.19.x or
-  earlier, including 2.4.x.
-
-- iptables-1.3-for-kernel-2.6.20forward-layer7-[l7-filter version].patch
-
-  Use this patch if you are compiling iptables 1.3.x against Linux 2.6.20 or
-  later.
+  Use these files if you are compiling iptables 1.4.1.1 or later against Linux
+  2.6.20 or later.
 
 - iptables-1.4-for-kernel-2.6.20forward-layer7-[l7-filter version].patch
 
   Use this patch if you are compiling iptables 1.4.0 against Linux 2.6.20 or
   later.
 
-- iptables-1.4.1.1-for-kernel-2.6.20forward-layer7-[l7-filter version].patch
+- iptables-1.3-for-kernel-2.6.20forward-layer7-[l7-filter version].patch
 
-  Use this patch if you are compiling iptables 1.4.1.1 or later against Linux
-  2.6.20 or later.
+  Use this patch if you are compiling iptables 1.3.x against Linux 2.6.20 or
+  later.
 
-- If you need to compile iptables 1.4.x against Linux 2.6.19.x or earlier, 
-  let us know.
+- iptables-1.3-for-kernel-pre2.6.20-layer7-[l7-filter version].patch
 
-You do NOT need to recompile iptables if you change your running kernel 
+  Use this patch if you are compiling iptables 1.3.x against Linux 2.6.19.x or
+  earlier, including 2.4.x.
+
+Notes:
+
+- Compiling iptables 1.4.x against Linux 2.6.19.x or earlier is not supported.
+
+- iptables 1.4.1 is not supported.
+
+- You do NOT need to recompile iptables if you change your running kernel 
 version across the 2.6.20 boundary and you already have a working iptables.
 
-However, you DO need to recompile iptables if you switch from a kernel 
-patched with l7-filter <= v2.10 to one patched with l7-filter >= v2.11.
+- You DO need to recompile iptables if you switch from a kernel patched 
+with l7-filter <= v2.10 to one patched with l7-filter >= v2.11.
