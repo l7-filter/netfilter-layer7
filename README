@@ -3,7 +3,7 @@ http://l7-filter.sf.net/L7-HOWTO-Netfilter
 
 In this directory you will find:
 
-- a patch for Linux 2.6 called "kernel-2.6.11-layer7-1.1.patch"
+- a patch for Linux 2.6 called "kernel-2.6.11-layer7-1.2.patch"
 
 This patch is against 2.6.11.  It won't work with earlier kernels.  It may
 work with later ones.

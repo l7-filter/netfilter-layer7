@@ -512,7 +512,7 @@
 +
 +	/* On the first packet of a connection, allocate space for app data */
 +	WRITE_LOCK(&ct_lock);
-+	if(TOTAL_PACKETS == 1 && !skb->cb[0]) {
++	if(TOTAL_PACKETS == 1 && !skb->cb[0] && !master_conntrack->layer7.app_data) {
 +		master_conntrack->layer7.app_data = kmalloc(CONFIG_IP_NF_MATCH_LAYER7_MAXDATALEN, GFP_ATOMIC);
 +		if(!master_conntrack->layer7.app_data){							 
 +			if (net_ratelimit()) 

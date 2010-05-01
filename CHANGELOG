@@ -1,3 +1,15 @@
+v1.2 - Bug fix release:
+
+- Fixed another (smaller, but significant) memory leak in 2.6 kernel. 
+The fix is a bit of a hack and I'd like to fix it in a more satisfying
+way later.
+
+- Fixed compilation of 2.4 kernel on RH9 and other systems by adding
+another #include to ipt_layer7.c
+
+No change to iptables.
+
+
 v1.1 - Added patch for Linux 2.6.11.X.  No real changes.
 
 
