@@ -1,3 +1,16 @@
+v1.3
+
+- Brought the 2.4 patch up-to-date with the 2.6 patch.  It now contains
+all the features that 2.6 does.  (The 2.4 version still does not use
+CONFIG_IP_NF_CT_ACCT, so it is not necessary to apply that patch to make
+l7 work.)
+
+- Increased NSUBEXP from 10 to 16 in regexp.h to allow for longer
+regular expressions.
+
+- Removed extraneous .orig file from the iptables patch.
+
+
 v1.2 - Bug fix release:
 
 - Fixed another (smaller, but significant) memory leak in 2.6 kernel. 
@@ -42,6 +55,10 @@ marked "unknown".
 - Skbuffs are now linearized and error messages are net_ratelimited.
 
 
+v0.9.2 (retroactive) - Added a #include to 2.4 kernel patch so it would 
+compile for more people.
+
+
 v0.9.1 - Changes to ipt_helper.c that aren't part of l7-filter had crept
 into the 2.6 patch of v0.9.0.  They are now removed.  No other changes.
 
@@ -76,4 +93,3 @@ spin_lock() and GFP_ATOMIC.  No change to iptables code.
 
 
 v0.5 - Initial release in this format.
-

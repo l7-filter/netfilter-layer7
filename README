@@ -1,30 +1,36 @@
-Please see the documentation at http://l7-filter.sf.net , especially
-http://l7-filter.sf.net/L7-HOWTO-Netfilter
+Please see the HOWTO at http://l7-filter.sf.net/L7-HOWTO-Netfilter
+
+Mailing list: <l7-filter-developers@lists.sf.net>
+Or if you'd rather: Matthew Strait <quadong@users.sf.net>
 
 In this directory you will find:
 
-- a patch for Linux 2.6 called "kernel-2.6.11-layer7-1.2.patch"
+***** kernel patches *****
 
-This patch is against 2.6.11.  It won't work with earlier kernels.  It may
-work with later ones.
+- a patch for Linux 2.6 called "kernel-2.6.11-layer7-1.3.patch"
+
+This patch is against 2.6.11.  It won't work with earlier kernels.  It
+probably works later ones (but this isn't tested, for obvious reasons).
+
+For older 2.6 kernels, see the "for_older_kernels" directory.  Here you
+will find files named like this:
+ 
+"kernel-[kernel version range]-layer7-[l7-filter-version].patch".
+
+Use the one that matches your kernel version.  If the l7-filter version
+is not the latest, then it may be missing some newer features.  See CHANGELOG.
 
 
-- a directory called "for_older_kernels/"
+- a patch for Linux 2.4 called "kernel-2.4-layer7-1.3.patch"
 
-This contains patches for older kernels.  The file names have the format:
-"kernel-[kernel version range]-layer7-[l7-filter version].patch".
+This patch is against 2.4.30.  As far as we know, it works with all 2.4
+versions, but we have not tested them all.  It is highly likely that it
+will work with any future 2.4 versions.
 
-Use the one that matches your kernel version.  If the l7-filter version is
-not the latest, then it may be missing some newer features.  See CHANGELOG.
-
+***** iptables patch *****
 
 - a patch for iptables (independent of kernel version) called
 "iptables-layer7-[l7-filter version].patch"
 
 This patch is against 1.3.0, but should work with any reasonably modern
 version of iptables.
-
-
-Contact: Matthew Strait <quadong@users.sf.net>
-Mailing list: <l7-filter-developers@lists.sf.net>
-

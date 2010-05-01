@@ -1,23 +1,54 @@
---- linux-2.6.11.3-stock/include/linux/netfilter_ipv4/ip_conntrack.h	2005-03-13 00:44:41.000000000 -0600
-+++ linux-2.6.11.3-layer7/include/linux/netfilter_ipv4/ip_conntrack.h	2005-03-13 20:30:01.000000000 -0600
-@@ -177,6 +177,15 @@ struct ip_conntrack
- 	/* Traversed often, so hopefully in different cacheline to top */
- 	/* These are my tuples; original and reply */
- 	struct ip_conntrack_tuple_hash tuplehash[IP_CT_DIR_MAX];
+diff -Nurp linux-2.4.30/Documentation/Configure.help linux-2.4.30-layer7/Documentation/Configure.help
+--- linux-2.4.30/Documentation/Configure.help	2005-04-03 20:42:19.000000000 -0500
++++ linux-2.4.30-layer7/Documentation/Configure.help	2005-05-03 18:37:03.000000000 -0500
+@@ -29056,6 +29056,23 @@ CONFIG_SOUND_WM97XX
+   
+   If unsure, say N.
+ 
++CONFIG_IP_NF_MATCH_LAYER7
++   Say Y if you want to be able to classify connections (and their 
++   packets) based on regular expression matching of their application 
++   layer data.   This is one way to classify applications such as 
++   peer-to-peer filesharing systems that do not always use the same 
++   port.
 +
++   To compile it as a module, choose M here.  If unsure, say N.
++
++CONFIG_IP_NF_MATCH_LAYER7_DEBUG
++   Say Y to get lots of debugging output.
++
++CONFIG_IP_NF_MATCH_LAYER7_MAXDATALEN
++   Size of the buffer that the application layer data is stored in.
++   Unless you know what you're doing, leave it at the default of 2048
++   Bytes.
++
+ #
+ # A couple of things I keep forgetting:
+ #   capitalize: AppleTalk, Ethernet, DOS, DMA, FAT, FTP, Internet,
+diff -Nurp linux-2.4.30/include/linux/netfilter_ipv4/ip_conntrack.h linux-2.4.30-layer7/include/linux/netfilter_ipv4/ip_conntrack.h
+--- linux-2.4.30/include/linux/netfilter_ipv4/ip_conntrack.h	2005-04-03 20:42:20.000000000 -0500
++++ linux-2.4.30-layer7/include/linux/netfilter_ipv4/ip_conntrack.h	2005-05-03 18:37:03.000000000 -0500
+@@ -207,6 +207,17 @@ struct ip_conntrack
+ 	} nat;
+ #endif /* CONFIG_IP_NF_NAT_NEEDED */
+ 
 +#if defined(CONFIG_IP_NF_MATCH_LAYER7) || defined(CONFIG_IP_NF_MATCH_LAYER7_MODULE)
-+        struct {
-+                char * app_proto; /* e.g. "http". NULL before decision. "unknown" after decision if no match */
-+                char * app_data;  /* application layer data so far.  NULL after match decision */
-+                unsigned int app_data_len;
-+        } layer7;
-+#endif
++	struct {
++		unsigned int numpackets; /* surely this is kept track of somewhere else, right? I can't find it... */
++		char * app_proto; /* "http", "ftp", etc.  NULL if unclassifed */
++		
++		/* the application layer data so far.  NULL if ->numpackets > numpackets */
++		char * app_data; 
 +
++		unsigned int app_data_len;
++	} layer7;
++#endif
  };
  
- struct ip_conntrack_expect
---- linux-2.6.11.3-stock/include/linux/netfilter_ipv4/ipt_layer7.h	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.11.3-layer7/include/linux/netfilter_ipv4/ipt_layer7.h	2005-03-13 20:30:01.000000000 -0600
+ /* get master conntrack via master expectation */
+diff -Nurp linux-2.4.30/include/linux/netfilter_ipv4/ipt_layer7.h linux-2.4.30-layer7/include/linux/netfilter_ipv4/ipt_layer7.h
+--- linux-2.4.30/include/linux/netfilter_ipv4/ipt_layer7.h	1969-12-31 18:00:00.000000000 -0600
++++ linux-2.4.30-layer7/include/linux/netfilter_ipv4/ipt_layer7.h	2005-05-03 18:37:03.000000000 -0500
 @@ -0,0 +1,26 @@
 +/* 
 +  By Matthew Strait <quadong@users.sf.net>, Dec 2003.
@@ -45,87 +76,70 @@
 +};
 +
 +#endif /* _IPT_LAYER7_H */
---- linux-2.6.11.3-stock/net/ipv4/netfilter/Kconfig	2005-03-13 00:44:38.000000000 -0600
-+++ linux-2.6.11.3-layer7/net/ipv4/netfilter/Kconfig	2005-03-13 20:30:01.000000000 -0600
-@@ -146,6 +146,33 @@ config IP_NF_MATCH_MAC
- 
- 	  To compile it as a module, choose M here.  If unsure, say N.
- 
-+config IP_NF_MATCH_LAYER7
-+	tristate "Layer 7 match support (EXPERIMENTAL)"
-+	depends on IP_NF_IPTABLES && IP_NF_CT_ACCT && IP_NF_CONNTRACK && EXPERIMENTAL
-+	help
-+ 	  Say Y if you want to be able to classify connections (and their 
-+          packets) based on regular expression matching of their application 
-+	  layer data.   This is one way to classify applications such as 
-+	  peer-to-peer filesharing systems that do not always use the same 
-+	  port.
-+
-+	  To compile it as a module, choose M here.  If unsure, say N.
-+
-+config IP_NF_MATCH_LAYER7_DEBUG
-+	bool "Layer 7 debugging output"
-+	depends on IP_NF_MATCH_LAYER7
-+	help
-+	  Say Y to get lots of debugging output.
-+
-+config IP_NF_MATCH_LAYER7_MAXDATALEN
-+        int "Buffer size for application layer data" if IP_NF_MATCH_LAYER7
-+        range 256 65536 
-+        default 2048
-+	help
-+	  Size of the buffer that the application layer data is stored in.
-+	  Unless you know what you're doing, leave it at the default of 2kB.
-+
-+
- config IP_NF_MATCH_PKTTYPE
- 	tristate "Packet type match support"
- 	depends on IP_NF_IPTABLES
---- linux-2.6.11.3-stock/net/ipv4/netfilter/Makefile	2005-03-13 00:44:14.000000000 -0600
-+++ linux-2.6.11.3-layer7/net/ipv4/netfilter/Makefile	2005-03-13 20:30:01.000000000 -0600
-@@ -60,6 +60,8 @@ obj-$(CONFIG_IP_NF_MATCH_ADDRTYPE) += ip
- obj-$(CONFIG_IP_NF_MATCH_PHYSDEV) += ipt_physdev.o
- obj-$(CONFIG_IP_NF_MATCH_COMMENT) += ipt_comment.o
- 
+diff -Nurp linux-2.4.30/net/ipv4/netfilter/Config.in linux-2.4.30-layer7/net/ipv4/netfilter/Config.in
+--- linux-2.4.30/net/ipv4/netfilter/Config.in	2005-01-19 08:10:13.000000000 -0600
++++ linux-2.4.30-layer7/net/ipv4/netfilter/Config.in	2005-05-03 18:37:03.000000000 -0500
+@@ -43,6 +43,10 @@ if [ "$CONFIG_IP_NF_IPTABLES" != "n" ]; 
+   if [ "$CONFIG_EXPERIMENTAL" = "y" ]; then
+     dep_tristate '  Unclean match support (EXPERIMENTAL)' CONFIG_IP_NF_MATCH_UNCLEAN $CONFIG_IP_NF_IPTABLES
+     dep_tristate '  Owner match support (EXPERIMENTAL)' CONFIG_IP_NF_MATCH_OWNER $CONFIG_IP_NF_IPTABLES
++    dep_tristate '  Layer 7 match support (EXPERIMENTAL)' CONFIG_IP_NF_MATCH_LAYER7 $CONFIG_IP_NF_CONNTRACK
++    dep_mbool '  Layer 7 debugging output (EXPERIMENTAL)' CONFIG_IP_NF_MATCH_LAYER7_DEBUG $CONFIG_IP_NF_MATCH_LAYER7
++    int  '  Buffer size for application layer data (256-65536)' CONFIG_IP_NF_MATCH_LAYER7_MAXDATALEN 2048
++ 
+   fi
+ # The targets
+   dep_tristate '  Packet filtering' CONFIG_IP_NF_FILTER $CONFIG_IP_NF_IPTABLES 
+diff -Nurp linux-2.4.30/net/ipv4/netfilter/Makefile linux-2.4.30-layer7/net/ipv4/netfilter/Makefile
+--- linux-2.4.30/net/ipv4/netfilter/Makefile	2003-08-25 06:44:44.000000000 -0500
++++ linux-2.4.30-layer7/net/ipv4/netfilter/Makefile	2005-05-03 18:44:12.000000000 -0500
+@@ -86,6 +86,7 @@ obj-$(CONFIG_IP_NF_MATCH_STATE) += ipt_s
+ obj-$(CONFIG_IP_NF_MATCH_CONNTRACK) += ipt_conntrack.o
+ obj-$(CONFIG_IP_NF_MATCH_UNCLEAN) += ipt_unclean.o
+ obj-$(CONFIG_IP_NF_MATCH_TCPMSS) += ipt_tcpmss.o
 +obj-$(CONFIG_IP_NF_MATCH_LAYER7) += ipt_layer7.o
-+
+ 
  # targets
  obj-$(CONFIG_IP_NF_TARGET_REJECT) += ipt_REJECT.o
- obj-$(CONFIG_IP_NF_TARGET_TOS) += ipt_TOS.o
---- linux-2.6.11.3-stock/net/ipv4/netfilter/ip_conntrack_core.c	2005-03-13 00:43:57.000000000 -0600
-+++ linux-2.6.11.3-layer7/net/ipv4/netfilter/ip_conntrack_core.c	2005-03-13 22:09:32.000000000 -0600
-@@ -247,6 +247,13 @@ destroy_conntrack(struct nf_conntrack *n
- 	 * too. */
- 	remove_expectations(ct);
- 
+diff -Nurp linux-2.4.30/net/ipv4/netfilter/ip_conntrack_core.c linux-2.4.30-layer7/net/ipv4/netfilter/ip_conntrack_core.c
+--- linux-2.4.30/net/ipv4/netfilter/ip_conntrack_core.c	2005-04-03 20:42:20.000000000 -0500
++++ linux-2.4.30-layer7/net/ipv4/netfilter/ip_conntrack_core.c	2005-05-03 18:37:03.000000000 -0500
+@@ -346,6 +346,14 @@ destroy_conntrack(struct nf_conntrack *n
+ 		}
+ 		kfree(ct->master);
+ 	}
++
 +	#if defined(CONFIG_IP_NF_MATCH_LAYER7) || defined(CONFIG_IP_NF_MATCH_LAYER7_MODULE)
 +	if(ct->layer7.app_proto)
 +		kfree(ct->layer7.app_proto);
 +	if(ct->layer7.app_data)
 +		kfree(ct->layer7.app_data);
 +	#endif
-+
- 	/* We overload first tuple to link into unconfirmed list. */
- 	if (!is_confirmed(ct)) {
- 		BUG_ON(list_empty(&ct->tuplehash[IP_CT_DIR_ORIGINAL].list));
---- linux-2.6.11.3-stock/net/ipv4/netfilter/ip_conntrack_standalone.c	2005-03-13 00:44:25.000000000 -0600
-+++ linux-2.6.11.3-layer7/net/ipv4/netfilter/ip_conntrack_standalone.c	2005-03-13 20:30:01.000000000 -0600
-@@ -152,6 +152,12 @@ static int ct_seq_real_show(const struct
- 		return 1;
- #endif
++	
+ 	WRITE_UNLOCK(&ip_conntrack_lock);
  
-+#if defined(CONFIG_IP_NF_MATCH_LAYER7) || defined(CONFIG_IP_NF_MATCH_LAYER7_MODULE)
+ 	if (master)
+diff -Nurp linux-2.4.30/net/ipv4/netfilter/ip_conntrack_standalone.c linux-2.4.30-layer7/net/ipv4/netfilter/ip_conntrack_standalone.c
+--- linux-2.4.30/net/ipv4/netfilter/ip_conntrack_standalone.c	2005-04-03 20:42:20.000000000 -0500
++++ linux-2.4.30-layer7/net/ipv4/netfilter/ip_conntrack_standalone.c	2005-05-03 18:37:03.000000000 -0500
+@@ -107,6 +107,13 @@ print_conntrack(char *buffer, struct ip_
+ 		len += sprintf(buffer + len, "[ASSURED] ");
+ 	len += sprintf(buffer + len, "use=%u ",
+ 		       atomic_read(&conntrack->ct_general.use));
++
++	#if defined(CONFIG_IP_NF_MATCH_LAYER7) || defined(CONFIG_IP_NF_MATCH_LAYER7_MODULE)
 +	if(conntrack->layer7.app_proto)
-+		if (seq_printf(s, "l7proto=%s ",conntrack->layer7.app_proto))
-+			return 1;
-+#endif
++		len += sprintf(buffer + len, "l7proto=%s ",
++				conntrack->layer7.app_proto); 
++	#endif
 +
- 	if (seq_printf(s, "use=%u\n", atomic_read(&conntrack->ct_general.use)))
- 		return 1;
+ 	len += sprintf(buffer + len, "\n");
  
---- linux-2.6.11.3-stock/net/ipv4/netfilter/ipt_layer7.c	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.11.3-layer7/net/ipv4/netfilter/ipt_layer7.c	2005-03-13 20:30:01.000000000 -0600
-@@ -0,0 +1,552 @@
+ 	return len;
+diff -Nurp linux-2.4.30/net/ipv4/netfilter/ipt_layer7.c linux-2.4.30-layer7/net/ipv4/netfilter/ipt_layer7.c
+--- linux-2.4.30/net/ipv4/netfilter/ipt_layer7.c	1969-12-31 18:00:00.000000000 -0600
++++ linux-2.4.30-layer7/net/ipv4/netfilter/ipt_layer7.c	2005-05-03 18:37:03.000000000 -0500
+@@ -0,0 +1,557 @@
 +/* 
 +  Kernel module to match application layer (OSI layer 7) 
 +  data in connections.
@@ -168,8 +182,7 @@
 +	#define DPRINTK(format,args...)
 +#endif
 +
-+#define TOTAL_PACKETS master_conntrack->counters[IP_CT_DIR_ORIGINAL].packets + \
-+		      master_conntrack->counters[IP_CT_DIR_REPLY].packets
++#define TOTAL_PACKETS master_conntrack->layer7.numpackets
 +
 +/* Number of packets whose data we look at.
 +This can be modified through /proc/net/layer7_numpackets */
@@ -244,9 +257,9 @@
 +	int i;
 +
 +	if(!g) {
-+	       if (net_ratelimit()) 
++		if (net_ratelimit()) 
 +			printk(KERN_ERR "layer7: out of memory in hex_print, bailing.\n");
-+	       return NULL;
++		return NULL;
 +	}
 +
 +	for(i = 0; i < strlen(s); i++) {
@@ -271,7 +284,7 @@
 +
 +	while (node != NULL) {
 +		if (!strcmp(node->regex_string, regex_string)) 
-+		return node->pattern;
++			return node->pattern;
 +
 +		last_pattern_cache = node;/* points at the last non-NULL node */
 +		node = node->next;
@@ -373,7 +386,7 @@
 +		if(!master_conntrack->layer7.app_proto) {
 +			char * f = friendly_print(master_conntrack->layer7.app_data);
 +			char * g = hex_print(master_conntrack->layer7.app_data);
-+			DPRINTK("\nl7-filter gave up after %d bytes (%llu packets):\n%s\n", 
++			DPRINTK("\nl7-filter gave up after %d bytes (%d packets):\n%s\n",
 +				strlen(f), 
 +				TOTAL_PACKETS, f);
 +			kfree(f); 
@@ -477,6 +490,12 @@
 +	while (master_ct(master_conntrack) != NULL)
 +		master_conntrack = master_ct(master_conntrack);
 +
++	if(!skb->cb[0]){
++		WRITE_LOCK(&ct_lock);
++		master_conntrack->layer7.numpackets++;/*starts at 0 via memset*/
++		WRITE_UNLOCK(&ct_lock);
++	}
++
 +	/* if we've classified it or seen too many packets */
 +	if(TOTAL_PACKETS > num_packets || 
 +	   master_conntrack->layer7.app_proto) {
@@ -514,8 +533,8 @@
 +	WRITE_LOCK(&ct_lock);
 +	if(TOTAL_PACKETS == 1 && !skb->cb[0] && !master_conntrack->layer7.app_data) {
 +		master_conntrack->layer7.app_data = kmalloc(CONFIG_IP_NF_MATCH_LAYER7_MAXDATALEN, GFP_ATOMIC);
-+		if(!master_conntrack->layer7.app_data){							 
-+			if (net_ratelimit()) 
++		if(!master_conntrack->layer7.app_data){
++			if (net_ratelimit())
 +				printk(KERN_ERR "layer7: out of memory in match, bailing.\n");
 +			WRITE_UNLOCK(&ct_lock);
 +			return info->invert;
@@ -594,7 +613,7 @@
 +
 +	for (;; s++) {
 +		switch (*s) {
-+			case '0'...'9':
++		case '0'...'9':
 +			val = 10*val+(*s-'0');
 +			break;
 +		default:
@@ -678,8 +697,9 @@
 +
 +module_init(init);
 +module_exit(fini);
---- linux-2.6.11.3-stock/net/ipv4/netfilter/regexp/regexp.c	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.11.3-layer7/net/ipv4/netfilter/regexp/regexp.c	2005-03-13 20:30:01.000000000 -0600
+diff -Nurp linux-2.4.30/net/ipv4/netfilter/regexp/regexp.c linux-2.4.30-layer7/net/ipv4/netfilter/regexp/regexp.c
+--- linux-2.4.30/net/ipv4/netfilter/regexp/regexp.c	1969-12-31 18:00:00.000000000 -0600
++++ linux-2.4.30-layer7/net/ipv4/netfilter/regexp/regexp.c	2005-05-03 18:37:03.000000000 -0500
 @@ -0,0 +1,1195 @@
 +/*
 + * regcomp and regexec -- regsub and regerror are elsewhere
@@ -1876,9 +1896,10 @@
 +#endif
 +
 +
---- linux-2.6.11.3-stock/net/ipv4/netfilter/regexp/regexp.h	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.11.3-layer7/net/ipv4/netfilter/regexp/regexp.h	2005-03-13 20:30:01.000000000 -0600
-@@ -0,0 +1,27 @@
+diff -Nurp linux-2.4.30/net/ipv4/netfilter/regexp/regexp.h linux-2.4.30-layer7/net/ipv4/netfilter/regexp/regexp.h
+--- linux-2.4.30/net/ipv4/netfilter/regexp/regexp.h	1969-12-31 18:00:00.000000000 -0600
++++ linux-2.4.30-layer7/net/ipv4/netfilter/regexp/regexp.h	2005-05-03 18:37:03.000000000 -0500
+@@ -0,0 +1,40 @@
 +/*
 + * Definitions etc. for regexp(3) routines.
 + *
@@ -1889,7 +1910,20 @@
 +#ifndef REGEXP_H
 +#define REGEXP_H
 +
-+#define NSUBEXP  10
++/* 
++http://www.opensource.apple.com/darwinsource/10.3/expect-1/expect/expect.h , 
++which contains a version of this library, says:
++
++ *
++ * NSUBEXP must be at least 10, and no greater than 117 or the parser
++ * will not work properly.
++ *
++
++ This may or may not actually be true for this version, but let's not 
++ push it. :-) The original value was 10.
++*/
++
++#define NSUBEXP  16
 +typedef struct regexp {
 +	char *startp[NSUBEXP];
 +	char *endp[NSUBEXP];
@@ -1906,16 +1940,18 @@
 +void regerror(char *s);
 +
 +#endif
---- linux-2.6.11.3-stock/net/ipv4/netfilter/regexp/regmagic.h	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.11.3-layer7/net/ipv4/netfilter/regexp/regmagic.h	2005-03-13 20:30:01.000000000 -0600
+diff -Nurp linux-2.4.30/net/ipv4/netfilter/regexp/regmagic.h linux-2.4.30-layer7/net/ipv4/netfilter/regexp/regmagic.h
+--- linux-2.4.30/net/ipv4/netfilter/regexp/regmagic.h	1969-12-31 18:00:00.000000000 -0600
++++ linux-2.4.30-layer7/net/ipv4/netfilter/regexp/regmagic.h	2005-05-03 18:37:03.000000000 -0500
 @@ -0,0 +1,5 @@
 +/*
 + * The first byte of the regexp internal "program" is actually this magic
 + * number; the start node begins in the second byte.
 + */
 +#define	MAGIC	0234
---- linux-2.6.11.3-stock/net/ipv4/netfilter/regexp/regsub.c	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.11.3-layer7/net/ipv4/netfilter/regexp/regsub.c	2005-03-13 20:30:01.000000000 -0600
+diff -Nurp linux-2.4.30/net/ipv4/netfilter/regexp/regsub.c linux-2.4.30-layer7/net/ipv4/netfilter/regexp/regsub.c
+--- linux-2.4.30/net/ipv4/netfilter/regexp/regsub.c	1969-12-31 18:00:00.000000000 -0600
++++ linux-2.4.30-layer7/net/ipv4/netfilter/regexp/regsub.c	2005-05-03 18:37:03.000000000 -0500
 @@ -0,0 +1,95 @@
 +/*
 + * regsub
