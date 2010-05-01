@@ -1899,11 +1899,11 @@
 + * will not work properly.
 + *
 +
-+ This may or may not actually be true for this version, but let's not 
-+ push it. :-) The original value was 10.
++However, it looks rather like this library is limited to 10.  If you think
++otherwise, let us know.
 +*/
 +
-+#define NSUBEXP  16
++#define NSUBEXP  10
 +typedef struct regexp {
 +	char *startp[NSUBEXP];
 +	char *endp[NSUBEXP];

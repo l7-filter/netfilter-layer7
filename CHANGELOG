@@ -1,3 +1,7 @@
+v1.4 - Changed NSUBEXP back to 10 since it looks like our regexp library
+can't actually handle higher numbers properly.  No change to iptables.
+
+
 v1.3
 
 - Brought the 2.4 patch up-to-date with the 2.6 patch.  It now contains
@@ -9,6 +13,8 @@ l7 work.)
 regular expressions.
 
 - Removed extraneous .orig file from the iptables patch.
+
+- Module unloading in 2.4 now works.
 
 
 v1.2 - Bug fix release:
