@@ -1,13 +1,13 @@
-diff -Nurp iptables-1.3.0-stock/extensions/.layer7-test iptables-1.3.0-layer7/extensions/.layer7-test
---- iptables-1.3.0-stock/extensions/.layer7-test	1969-12-31 18:00:00.000000000 -0600
-+++ iptables-1.3.0-layer7/extensions/.layer7-test	2005-03-01 22:12:06.000000000 -0600
+diff -Nurp iptables-1.3.3/extensions/.layer7-test iptables-1.3.3-layer7/extensions/.layer7-test
+--- iptables-1.3.3/extensions/.layer7-test	1969-12-31 18:00:00.000000000 -0600
++++ iptables-1.3.3-layer7/extensions/.layer7-test	2005-08-14 17:13:04.000000000 -0500
 @@ -0,0 +1,2 @@
 +#! /bin/sh
 +[ -f $KERNEL_DIR/include/linux/netfilter_ipv4/ipt_layer7.h ] && echo layer7
-diff -Nurp iptables-1.3.0-stock/extensions/libipt_layer7.c iptables-1.3.0-layer7/extensions/libipt_layer7.c
---- iptables-1.3.0-stock/extensions/libipt_layer7.c	1969-12-31 18:00:00.000000000 -0600
-+++ iptables-1.3.0-layer7/extensions/libipt_layer7.c	2005-03-06 22:14:13.000000000 -0600
-@@ -0,0 +1,357 @@
+diff -Nurp iptables-1.3.3/extensions/libipt_layer7.c iptables-1.3.3-layer7/extensions/libipt_layer7.c
+--- iptables-1.3.3/extensions/libipt_layer7.c	1969-12-31 18:00:00.000000000 -0600
++++ iptables-1.3.3-layer7/extensions/libipt_layer7.c	2005-08-14 17:16:00.000000000 -0500
+@@ -0,0 +1,350 @@
 +/* 
 +   Shared library add-on to iptables to add layer 7 matching support. 
 +  
@@ -57,12 +57,6 @@ diff -Nurp iptables-1.3.0-stock/extensions/libipt_layer7.c iptables-1.3.0-layer7
 +	{ .name = "l7dir",   .has_arg = 1, .flag = 0, .val = '2' },
 +	{ .name = 0 }
 +};
-+
-+/* Initialize the match. */
-+static void init(struct ipt_entry_match *m, unsigned int *nfcache)
-+{
-+	*nfcache |= NFC_UNKNOWN;
-+}
 +
 +/* reads filename, puts protocol info into layer7_protocol_info, number of protocols to numprotos */
 +int parse_protocol_file(char * filename, const unsigned char * protoname, struct ipt_layer7_info *info)
@@ -353,7 +347,6 @@ diff -Nurp iptables-1.3.0-stock/extensions/libipt_layer7.c iptables-1.3.0-layer7
 +    .size          = IPT_ALIGN(sizeof(struct ipt_layer7_info)),
 +    .userspacesize = IPT_ALIGN(sizeof(struct ipt_layer7_info)),
 +    .help          = &help,
-+    .init          = &init,
 +    .parse         = &parse,
 +    .final_check   = &final_check,
 +    .print         = &print,
@@ -365,9 +358,9 @@ diff -Nurp iptables-1.3.0-stock/extensions/libipt_layer7.c iptables-1.3.0-layer7
 +{
 +	register_match(&layer7);
 +}
-diff -Nurp iptables-1.3.0-stock/extensions/libipt_layer7.man iptables-1.3.0-layer7/extensions/libipt_layer7.man
---- iptables-1.3.0-stock/extensions/libipt_layer7.man	1969-12-31 18:00:00.000000000 -0600
-+++ iptables-1.3.0-layer7/extensions/libipt_layer7.man	2005-03-01 22:12:06.000000000 -0600
+diff -Nurp iptables-1.3.3/extensions/libipt_layer7.man iptables-1.3.3-layer7/extensions/libipt_layer7.man
+--- iptables-1.3.3/extensions/libipt_layer7.man	1969-12-31 18:00:00.000000000 -0600
++++ iptables-1.3.3-layer7/extensions/libipt_layer7.man	2005-08-14 17:13:04.000000000 -0500
 @@ -0,0 +1,13 @@
 +This module matches packets based on the application layer data of 
 +their connections.  It uses regular expression matching to compare 

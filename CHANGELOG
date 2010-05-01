@@ -1,3 +1,11 @@
+v1.5 - No functional changes.
+
+- Updated 2.6 kernel patch for new lock syntax.
+
+- Removed init() from iptables (not necessary).
+
+- Made debugging messages less enthusiastic.
+
 v1.4 - Changed NSUBEXP back to 10 since it looks like our regexp library
 can't actually handle higher numbers properly.  No change to iptables.
 
