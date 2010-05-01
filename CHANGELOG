@@ -1,3 +1,6 @@
+v0.8.2 - Iptables now uses modular man pages (as of v1.2.10).  The iptables
+patch now conforms to this new format.  No change to kernel.
+
 v0.8.1 - Made code slightly more paranoid about running out of memory.  No 
 change to iptables.
 

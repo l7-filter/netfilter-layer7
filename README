@@ -7,6 +7,9 @@ Here you will find:
 The 2.4 patch is against 2.4.26 and the 2.6 patch is against 2.6.6, but
 they probably work with any kernel of the appropriate series.
 
+The iptables patch is against 1.2.11, but should work with any
+reasonably modern version of iptables.
+
 Please see the documentation at http://l7-filter.sf.net/ , specifically
 http://l7-filter.sf.net/L7-HOWTO-Netfilter
 

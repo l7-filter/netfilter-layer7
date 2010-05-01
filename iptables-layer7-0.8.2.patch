@@ -1,12 +1,12 @@
-diff -Naur iptables-1.2.9-stock/extensions/.layer7-test iptables-1.2.9-layer7/extensions/.layer7-test
---- iptables-1.2.9-stock/extensions/.layer7-test	1969-12-31 18:00:00.000000000 -0600
-+++ iptables-1.2.9-layer7/extensions/.layer7-test	2004-02-16 11:06:15.000000000 -0600
+diff -Nurp iptables-1.2.11-stock/extensions/.layer7-test iptables-1.2.11-layer7/extensions/.layer7-test
+--- iptables-1.2.11-stock/extensions/.layer7-test	1969-12-31 18:00:00.000000000 -0600
++++ iptables-1.2.11-layer7/extensions/.layer7-test	2004-06-23 19:32:45.620103208 -0500
 @@ -0,0 +1,2 @@
 +#! /bin/sh
 +[ -f $KERNEL_DIR/include/linux/netfilter_ipv4/ipt_layer7.h ] && echo layer7
-diff -Naur iptables-1.2.9-stock/extensions/libipt_layer7.c iptables-1.2.9-layer7/extensions/libipt_layer7.c
---- iptables-1.2.9-stock/extensions/libipt_layer7.c	1969-12-31 18:00:00.000000000 -0600
-+++ iptables-1.2.9-layer7/extensions/libipt_layer7.c	2004-02-16 11:54:35.244466752 -0600
+diff -Nurp iptables-1.2.11-stock/extensions/libipt_layer7.c iptables-1.2.11-layer7/extensions/libipt_layer7.c
+--- iptables-1.2.11-stock/extensions/libipt_layer7.c	1969-12-31 18:00:00.000000000 -0600
++++ iptables-1.2.11-layer7/extensions/libipt_layer7.c	2004-06-23 19:32:45.623102752 -0500
 @@ -0,0 +1,360 @@
 +/* 
 +   Shared library add-on to iptables to add layer 7 matching support. 
@@ -368,19 +368,14 @@ diff -Naur iptables-1.2.9-stock/extensions/libipt_layer7.c iptables-1.2.9-layer7
 +{
 +	register_match(&layer7);
 +}
-diff -Naur iptables-1.2.9-stock/iptables.8 iptables-1.2.9-layer7/iptables.8
---- iptables-1.2.9-stock/iptables.8	2003-06-30 11:16:54.000000000 -0500
-+++ iptables-1.2.9-layer7/iptables.8	2004-02-16 11:06:43.000000000 -0600
-@@ -469,6 +469,20 @@
- .nf
-  iptables -p icmp -h
- .fi
-+.SS layer7
+diff -Nurp iptables-1.2.11-stock/extensions/libipt_layer7.man iptables-1.2.11-layer7/extensions/libipt_layer7.man
+--- iptables-1.2.11-stock/extensions/libipt_layer7.man	1969-12-31 18:00:00.000000000 -0600
++++ iptables-1.2.11-layer7/extensions/libipt_layer7.man	2004-06-23 19:36:39.687519552 -0500
+@@ -0,0 +1,13 @@
 +This module matches packets based on the application layer data of 
-+their connections.  It 
-+uses regular expression matching to compare the application layer data
-+to regular expressions found it the layer7 configuration files.  
-+This is an experimental module which can be found at 
++their connections.  It uses regular expression matching to compare 
++the application layer data to regular expressions found it the layer7 
++configuration files.  This is an experimental module which can be found at 
 +http://l7-filter.sf.net.  It takes two options.
 +.TP
 +.BI "--l7proto " "\fIprotocol\fP"
@@ -389,6 +384,4 @@ diff -Naur iptables-1.2.9-stock/iptables.8 iptables-1.2.9-layer7/iptables.8
 +.TP
 +.BI "--l7dir " "\fIdirectory\fP"
 +Use \fIdirectory\fP instead of /etc/l7-protocols/
- .SS length
- This module matches the length of a packet against a specific value
- or range of values.
++
