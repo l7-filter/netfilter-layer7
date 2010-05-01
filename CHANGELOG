@@ -1,3 +1,9 @@
+v2.8 - Changes to 2.6 version: Removed checkmatch() from ipt_layer7.c 
+(fixes iptables' "Invalid argument" problem) and surpressed compiler 
+warning about non-const skb in match().  Removed stray_code, since the 
+new port is to userspace, where this is not necessary either.
+
+
 v2.7 - In 2.6 version, ipt_layer7 now automatically loads ip_conntrack. 
 No changes to 2.4 version or iptables.  Updated documentation slightly.
 

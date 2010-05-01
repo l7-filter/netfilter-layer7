@@ -1,5 +1,5 @@
---- linux-2.6.18/include/linux/netfilter_ipv4/ip_conntrack.h	2006-09-19 22:42:06.000000000 -0500
-+++ linux-2.6.18-layer7/include/linux/netfilter_ipv4/ip_conntrack.h	2006-09-24 10:17:45.000000000 -0500
+--- linux-2.6.19.1/include/linux/netfilter_ipv4/ip_conntrack.h	2006-12-11 13:32:53.000000000 -0600
++++ linux-2.6.19.1-layer7/include/linux/netfilter_ipv4/ip_conntrack.h	2006-12-13 00:13:08.000000000 -0600
 @@ -127,6 +127,15 @@ struct ip_conntrack
  	/* Traversed often, so hopefully in different cacheline to top */
  	/* These are my tuples; original and reply */
@@ -16,8 +16,8 @@
  };
  
  struct ip_conntrack_expect
---- linux-2.6.18/include/linux/netfilter_ipv4/ipt_layer7.h	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.18-layer7/include/linux/netfilter_ipv4/ipt_layer7.h	2006-09-24 10:17:45.000000000 -0500
+--- linux-2.6.19.1/include/linux/netfilter_ipv4/ipt_layer7.h	1969-12-31 18:00:00.000000000 -0600
++++ linux-2.6.19.1-layer7/include/linux/netfilter_ipv4/ipt_layer7.h	2006-12-13 00:13:08.000000000 -0600
 @@ -0,0 +1,26 @@
 +/*
 +  By Matthew Strait <quadong@users.sf.net>, Dec 2003.
@@ -45,8 +45,8 @@
 +};
 +
 +#endif /* _IPT_LAYER7_H */
---- linux-2.6.18/net/ipv4/netfilter/Kconfig	2006-09-19 22:42:06.000000000 -0500
-+++ linux-2.6.18-layer7/net/ipv4/netfilter/Kconfig	2006-09-24 10:17:45.000000000 -0500
+--- linux-2.6.19.1/net/ipv4/netfilter/Kconfig	2006-12-11 13:32:53.000000000 -0600
++++ linux-2.6.19.1-layer7/net/ipv4/netfilter/Kconfig	2006-12-13 00:13:08.000000000 -0600
 @@ -248,6 +248,24 @@ config IP_NF_MATCH_IPRANGE
  
  	  To compile it as a module, choose M here.  If unsure, say N.
@@ -72,9 +72,9 @@
  config IP_NF_MATCH_TOS
  	tristate "TOS match support"
  	depends on IP_NF_IPTABLES
---- linux-2.6.18/net/ipv4/netfilter/Makefile	2006-09-19 22:42:06.000000000 -0500
-+++ linux-2.6.18-layer7/net/ipv4/netfilter/Makefile	2006-09-24 10:17:45.000000000 -0500
-@@ -64,6 +64,8 @@ obj-$(CONFIG_IP_NF_MATCH_AH) += ipt_ah.o
+--- linux-2.6.19.1/net/ipv4/netfilter/Makefile	2006-12-11 13:32:53.000000000 -0600
++++ linux-2.6.19.1-layer7/net/ipv4/netfilter/Makefile	2006-12-13 00:13:08.000000000 -0600
+@@ -63,6 +63,8 @@ obj-$(CONFIG_IP_NF_MATCH_AH) += ipt_ah.o
  obj-$(CONFIG_IP_NF_MATCH_TTL) += ipt_ttl.o
  obj-$(CONFIG_IP_NF_MATCH_ADDRTYPE) += ipt_addrtype.o
  
@@ -83,9 +83,9 @@
  # targets
  obj-$(CONFIG_IP_NF_TARGET_REJECT) += ipt_REJECT.o
  obj-$(CONFIG_IP_NF_TARGET_TOS) += ipt_TOS.o
---- linux-2.6.18/net/ipv4/netfilter/ip_conntrack_core.c	2006-09-19 22:42:06.000000000 -0500
-+++ linux-2.6.18-layer7/net/ipv4/netfilter/ip_conntrack_core.c	2006-09-24 10:17:45.000000000 -0500
-@@ -338,6 +338,13 @@ destroy_conntrack(struct nf_conntrack *n
+--- linux-2.6.19.1/net/ipv4/netfilter/ip_conntrack_core.c	2006-12-11 13:32:53.000000000 -0600
++++ linux-2.6.19.1-layer7/net/ipv4/netfilter/ip_conntrack_core.c	2006-12-13 00:13:08.000000000 -0600
+@@ -337,6 +337,13 @@ destroy_conntrack(struct nf_conntrack *n
  	 * too. */
  	ip_ct_remove_expectations(ct);
  
@@ -99,9 +99,9 @@
  	/* We overload first tuple to link into unconfirmed list. */
  	if (!is_confirmed(ct)) {
  		BUG_ON(list_empty(&ct->tuplehash[IP_CT_DIR_ORIGINAL].list));
---- linux-2.6.18/net/ipv4/netfilter/ip_conntrack_standalone.c	2006-09-19 22:42:06.000000000 -0500
-+++ linux-2.6.18-layer7/net/ipv4/netfilter/ip_conntrack_standalone.c	2006-09-24 10:17:45.000000000 -0500
-@@ -193,6 +193,12 @@ static int ct_seq_show(struct seq_file *
+--- linux-2.6.19.1/net/ipv4/netfilter/ip_conntrack_standalone.c	2006-12-11 13:32:53.000000000 -0600
++++ linux-2.6.19.1-layer7/net/ipv4/netfilter/ip_conntrack_standalone.c	2006-12-13 00:13:08.000000000 -0600
+@@ -192,6 +192,12 @@ static int ct_seq_show(struct seq_file *
  		return -ENOSPC;
  #endif
  
@@ -114,16 +114,15 @@
  	if (seq_printf(s, "use=%u\n", atomic_read(&conntrack->ct_general.use)))
  		return -ENOSPC;
  
---- linux-2.6.18/net/ipv4/netfilter/ipt_layer7.c	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.18-layer7/net/ipv4/netfilter/ipt_layer7.c	2006-12-12 22:45:48.000000000 -0600
-@@ -0,0 +1,584 @@
+--- linux-2.6.19.1/net/ipv4/netfilter/ipt_layer7.c	1969-12-31 18:00:00.000000000 -0600
++++ linux-2.6.19.1-layer7/net/ipv4/netfilter/ipt_layer7.c	2006-12-18 22:18:37.000000000 -0600
+@@ -0,0 +1,573 @@
 +/*
-+  Kernel module to match application layer (OSI layer 7)
-+  data in connections.
++  Kernel module to match application layer (OSI layer 7) data in connections.
 +
 +  http://l7-filter.sf.net
 +
-+  By Matthew Strait and Ethan Sommer, 2003-2005.
++  By Matthew Strait and Ethan Sommer, 2003-2006.
 +
 +  This program is free software; you can redistribute it and/or
 +  modify it under the terms of the GNU General Public License
@@ -448,11 +447,14 @@
 +}
 +
 +/* Returns true on match and false otherwise.  */
-+static int match(/* const */ struct sk_buff *skb,
++static int match(const struct sk_buff *skbin,
 +	const struct net_device *in, const struct net_device *out,
 +	const struct xt_match *match, const void *matchinfo,
 +	int offset, unsigned int protoff, int *hotdrop)
 +{
++	/* sidestep const without getting a compiler warning... */
++	struct sk_buff * skb = (struct sk_buff *)skbin; 
++
 +	struct ipt_layer7_info * info = (struct ipt_layer7_info *)matchinfo;
 +	enum ip_conntrack_info master_ctinfo, ctinfo;
 +	struct ip_conntrack *master_conntrack, *conntrack;
@@ -575,22 +577,9 @@
 +	return (pattern_result ^ info->invert);
 +}
 +
-+static int checkentry(const char *tablename, const void *ip,
-+	const struct xt_match *match, void *matchinfo, unsigned int matchsize,
-+	unsigned int hook_mask)
-+{
-+//        struct ipt_layer7_info * info = (struct ipt_layer7_info *)matchinfo;
-+
-+	if (matchsize != IPT_ALIGN(sizeof(struct ipt_layer7_info)))
-+		return 0;
-+
-+	return 1;
-+}
-+
 +static struct ipt_match layer7_match = {
 +	.name = "layer7",
 +	.match = &match,
-+	.checkentry = &checkentry,
 +	.matchsize  = sizeof(struct ipt_layer7_info),
 +	.me = THIS_MODULE
 +};
@@ -701,8 +690,8 @@
 +
 +module_init(ipt_layer7_init);
 +module_exit(ipt_layer7_fini);
---- linux-2.6.18/net/ipv4/netfilter/regexp/regexp.c	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.18-layer7/net/ipv4/netfilter/regexp/regexp.c	2006-09-24 10:17:45.000000000 -0500
+--- linux-2.6.19.1/net/ipv4/netfilter/regexp/regexp.c	1969-12-31 18:00:00.000000000 -0600
++++ linux-2.6.19.1-layer7/net/ipv4/netfilter/regexp/regexp.c	2006-12-13 00:13:08.000000000 -0600
 @@ -0,0 +1,1197 @@
 +/*
 + * regcomp and regexec -- regsub and regerror are elsewhere
@@ -1901,8 +1890,8 @@
 +#endif
 +
 +
---- linux-2.6.18/net/ipv4/netfilter/regexp/regexp.h	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.18-layer7/net/ipv4/netfilter/regexp/regexp.h	2006-09-24 10:17:45.000000000 -0500
+--- linux-2.6.19.1/net/ipv4/netfilter/regexp/regexp.h	1969-12-31 18:00:00.000000000 -0600
++++ linux-2.6.19.1-layer7/net/ipv4/netfilter/regexp/regexp.h	2006-12-13 00:13:08.000000000 -0600
 @@ -0,0 +1,41 @@
 +/*
 + * Definitions etc. for regexp(3) routines.
@@ -1945,16 +1934,16 @@
 +void regerror(char *s);
 +
 +#endif
---- linux-2.6.18/net/ipv4/netfilter/regexp/regmagic.h	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.18-layer7/net/ipv4/netfilter/regexp/regmagic.h	2006-09-24 10:17:45.000000000 -0500
+--- linux-2.6.19.1/net/ipv4/netfilter/regexp/regmagic.h	1969-12-31 18:00:00.000000000 -0600
++++ linux-2.6.19.1-layer7/net/ipv4/netfilter/regexp/regmagic.h	2006-12-13 00:13:08.000000000 -0600
 @@ -0,0 +1,5 @@
 +/*
 + * The first byte of the regexp internal "program" is actually this magic
 + * number; the start node begins in the second byte.
 + */
 +#define	MAGIC	0234
---- linux-2.6.18/net/ipv4/netfilter/regexp/regsub.c	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.18-layer7/net/ipv4/netfilter/regexp/regsub.c	2006-09-24 10:17:45.000000000 -0500
+--- linux-2.6.19.1/net/ipv4/netfilter/regexp/regsub.c	1969-12-31 18:00:00.000000000 -0600
++++ linux-2.6.19.1-layer7/net/ipv4/netfilter/regexp/regsub.c	2006-12-13 00:13:08.000000000 -0600
 @@ -0,0 +1,95 @@
 +/*
 + * regsub
