@@ -1,5 +1,11 @@
+v2.15 - 2.6 patches: Added /proc/net/ip_conntrack code in the new place that 
+it has to be for Linux 2.6.20 and up.  Tested with 2.6.20.8, 2.6.21.1, 
+2.6.22-rc7 and 2.6.23.1.
+
+
 v2.14 - 2.6 patches: Added missing dependency (NF_CT_ACCT) and fixed 
 Makefile in 2.6.20-21 and 2.6.22.
+
 
 v2.13 - 2.6 patch: Fixed compiler error on 64 bit platforms.
 
