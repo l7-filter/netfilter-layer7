@@ -7,11 +7,11 @@ In this directory you will find:
 
 ***** kernel patches *****
 
-- a patch for Linux 2.6 called "kernel-2.6.13-2.6.15-layer7-2.1.patch"
+- a patch for Linux 2.6 called "kernel-2.6.13-2.6.16-layer7-2.2.patch"
 
-  This patch is against 2.6.14 and will also work with 2.6.13 and 2.6.15.
-  It won't work with earlier kernels. Hopefully, it works with future ones
-  (but this isn't tested, obviously). For older 2.6 kernels, see the
+  This patch is against 2.6.16.14.  It also works with versions back as far
+  as 2.6.13, but won't work with earlier kernels. Hopefully, it works with 
+  future ones (obviously we don't know yet). For older 2.6 kernels, see the
   "for_older_kernels" directory. Here you will find files named like this:
  
   "kernel-[kernel version range]-layer7-[l7-filter-version].patch".
@@ -19,10 +19,10 @@ In this directory you will find:
   Use the one that matches your kernel version.  If the l7-filter version
   is not the latest, then it may be missing some newer features.  See CHANGELOG.
 
-- a patch for Linux 2.4 called "kernel-2.4-layer7-2.1.patch"
+- a patch for Linux 2.4 called "kernel-2.4-layer7-2.2.patch"
 
   This patch is against 2.4.31.  As far as we know, it works with all 2.4
-  versions, but we have not tested them all.  It is highly likely that it
+  versions, but we have not tested them all.  It is extremely likely that it
   will work with all future 2.4 versions.
 
 ***** iptables patch *****

@@ -1,3 +1,10 @@
+v2.2
+
+- Fixed type mismatch in debugging printk.
+
+- Updated for minor formatting changes in 2.6.16 that broke the old patch.
+
+
 v2.1 - iptables now issues warnings when regular expressions contain hex
 codes that are regexp control characters or null.  No change to kernel
 patches.  (Noted that kernel patch is now tested with 2.6.15.)
