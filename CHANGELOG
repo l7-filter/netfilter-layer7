@@ -1,3 +1,7 @@
+v0.9.0 - 2.4 version now should compile correctly if l7-filter is
+built-in. Fixed a significant bug which caused some patterns not to work
+(tolower was munging 'upper ascii' characters).  No change to iptables.
+
 v0.8.2 - Iptables now uses modular man pages (as of v1.2.10).  The iptables
 patch now conforms to this new format.  No change to kernel.
 

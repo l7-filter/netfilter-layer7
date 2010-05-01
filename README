@@ -4,11 +4,13 @@ Here you will find:
 - a patch for Linux 2.6.x 
 - a patch for iptables (independent of the kernel version)
 
-The 2.4 patch is against 2.4.26 and the 2.6 patch is against 2.6.6, but
+The 2.4 patch is against 2.4.26 and the 2.6 patch is against 2.6.7, but
 they probably work with any kernel of the appropriate series.
 
 The iptables patch is against 1.2.11, but should work with any
-reasonably modern version of iptables.
+reasonably modern version of iptables.  Note that iptables will not
+compile against Linux 2.6.7 (this is not a l7-filter bug), but it will
+still work if you compile it against another version.
 
 Please see the documentation at http://l7-filter.sf.net/ , specifically
 http://l7-filter.sf.net/L7-HOWTO-Netfilter
