@@ -1,6 +1,6 @@
-diff -Nurp linux-2.6.10-stock/include/linux/netfilter_ipv4/ip_conntrack.h linux-2.6.10-layer7/include/linux/netfilter_ipv4/ip_conntrack.h
+diff -Nurp linux-2.6.10-stock/include/linux/netfilter_ipv4/ip_conntrack.h linux-2.6.10-layer7-clean/include/linux/netfilter_ipv4/ip_conntrack.h
 --- linux-2.6.10-stock/include/linux/netfilter_ipv4/ip_conntrack.h	2004-12-24 15:35:28.000000000 -0600
-+++ linux-2.6.10-layer7/include/linux/netfilter_ipv4/ip_conntrack.h	2005-01-04 18:55:33.000000000 -0600
++++ linux-2.6.10-layer7-clean/include/linux/netfilter_ipv4/ip_conntrack.h	2005-01-07 13:25:36.000000000 -0600
 @@ -219,6 +219,15 @@ struct ip_conntrack
  	/* Traversed often, so hopefully in different cacheline to top */
  	/* These are my tuples; original and reply */
@@ -17,9 +17,9 @@ diff -Nurp linux-2.6.10-stock/include/linux/netfilter_ipv4/ip_conntrack.h linux-
  };
  
  /* get master conntrack via master expectation */
-diff -Nurp linux-2.6.10-stock/include/linux/netfilter_ipv4/ipt_layer7.h linux-2.6.10-layer7/include/linux/netfilter_ipv4/ipt_layer7.h
+diff -Nurp linux-2.6.10-stock/include/linux/netfilter_ipv4/ipt_layer7.h linux-2.6.10-layer7-clean/include/linux/netfilter_ipv4/ipt_layer7.h
 --- linux-2.6.10-stock/include/linux/netfilter_ipv4/ipt_layer7.h	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.10-layer7/include/linux/netfilter_ipv4/ipt_layer7.h	2005-01-04 13:29:01.000000000 -0600
++++ linux-2.6.10-layer7-clean/include/linux/netfilter_ipv4/ipt_layer7.h	2005-01-07 13:25:36.000000000 -0600
 @@ -0,0 +1,26 @@
 +/* 
 +  By Matthew Strait <quadong@users.sf.net>, Dec 2003.
@@ -47,9 +47,9 @@ diff -Nurp linux-2.6.10-stock/include/linux/netfilter_ipv4/ipt_layer7.h linux-2.
 +};
 +
 +#endif /* _IPT_LAYER7_H */
-diff -Nurp linux-2.6.10-stock/net/ipv4/netfilter/Kconfig linux-2.6.10-layer7/net/ipv4/netfilter/Kconfig
+diff -Nurp linux-2.6.10-stock/net/ipv4/netfilter/Kconfig linux-2.6.10-layer7-clean/net/ipv4/netfilter/Kconfig
 --- linux-2.6.10-stock/net/ipv4/netfilter/Kconfig	2004-12-24 15:35:24.000000000 -0600
-+++ linux-2.6.10-layer7/net/ipv4/netfilter/Kconfig	2005-01-04 19:05:11.000000000 -0600
++++ linux-2.6.10-layer7-clean/net/ipv4/netfilter/Kconfig	2005-01-07 13:26:59.000000000 -0600
 @@ -146,6 +146,33 @@ config IP_NF_MATCH_MAC
  
  	  To compile it as a module, choose M here.  If unsure, say N.
@@ -84,9 +84,9 @@ diff -Nurp linux-2.6.10-stock/net/ipv4/netfilter/Kconfig linux-2.6.10-layer7/net
  config IP_NF_MATCH_PKTTYPE
  	tristate "Packet type match support"
  	depends on IP_NF_IPTABLES
-diff -Nurp linux-2.6.10-stock/net/ipv4/netfilter/Makefile linux-2.6.10-layer7/net/ipv4/netfilter/Makefile
+diff -Nurp linux-2.6.10-stock/net/ipv4/netfilter/Makefile linux-2.6.10-layer7-clean/net/ipv4/netfilter/Makefile
 --- linux-2.6.10-stock/net/ipv4/netfilter/Makefile	2004-12-24 15:34:26.000000000 -0600
-+++ linux-2.6.10-layer7/net/ipv4/netfilter/Makefile	2005-01-04 13:29:01.000000000 -0600
++++ linux-2.6.10-layer7-clean/net/ipv4/netfilter/Makefile	2005-01-07 13:26:59.000000000 -0600
 @@ -70,6 +70,8 @@ obj-$(CONFIG_IP_NF_MATCH_ADDRTYPE) += ip
  obj-$(CONFIG_IP_NF_MATCH_PHYSDEV) += ipt_physdev.o
  obj-$(CONFIG_IP_NF_MATCH_COMMENT) += ipt_comment.o
@@ -96,14 +96,13 @@ diff -Nurp linux-2.6.10-stock/net/ipv4/netfilter/Makefile linux-2.6.10-layer7/ne
  # targets
  obj-$(CONFIG_IP_NF_TARGET_REJECT) += ipt_REJECT.o
  obj-$(CONFIG_IP_NF_TARGET_TOS) += ipt_TOS.o
-diff -Nurp linux-2.6.10-stock/net/ipv4/netfilter/ip_conntrack_core.c linux-2.6.10-layer7/net/ipv4/netfilter/ip_conntrack_core.c
+diff -Nurp linux-2.6.10-stock/net/ipv4/netfilter/ip_conntrack_core.c linux-2.6.10-layer7-clean/net/ipv4/netfilter/ip_conntrack_core.c
 --- linux-2.6.10-stock/net/ipv4/netfilter/ip_conntrack_core.c	2004-12-24 15:33:47.000000000 -0600
-+++ linux-2.6.10-layer7/net/ipv4/netfilter/ip_conntrack_core.c	2005-01-04 13:44:08.000000000 -0600
-@@ -312,6 +312,15 @@ destroy_conntrack(struct nf_conntrack *n
- 		}
- 		kmem_cache_free(ip_conntrack_expect_cachep, ct->master);
- 	}
-+
++++ linux-2.6.10-layer7-clean/net/ipv4/netfilter/ip_conntrack_core.c	2005-01-07 13:26:59.000000000 -0600
+@@ -302,6 +302,14 @@ destroy_conntrack(struct nf_conntrack *n
+ 	if (ct->expecting)
+ 		remove_expectations(ct, 1);
+ 
 +        #if defined(CONFIG_IP_NF_MATCH_LAYER7) || defined(CONFIG_IP_NF_MATCH_LAYER7_MODULE)
 +        /* This ought to get free'd somewhere.  How about here? */
 +        if(ct->layer7.app_proto)
@@ -112,12 +111,12 @@ diff -Nurp linux-2.6.10-stock/net/ipv4/netfilter/ip_conntrack_core.c linux-2.6.1
 +                kfree(ct->layer7.app_data);
 +        #endif
 +
- 	CONNTRACK_STAT_INC(delete);
- 	WRITE_UNLOCK(&ip_conntrack_lock);
- 
-diff -Nurp linux-2.6.10-stock/net/ipv4/netfilter/ip_conntrack_standalone.c linux-2.6.10-layer7/net/ipv4/netfilter/ip_conntrack_standalone.c
+ 	/* Delete our master expectation */
+ 	if (ct->master) {
+ 		if (ct->master->expectant) {
+diff -Nurp linux-2.6.10-stock/net/ipv4/netfilter/ip_conntrack_standalone.c linux-2.6.10-layer7-clean/net/ipv4/netfilter/ip_conntrack_standalone.c
 --- linux-2.6.10-stock/net/ipv4/netfilter/ip_conntrack_standalone.c	2004-12-24 15:34:33.000000000 -0600
-+++ linux-2.6.10-layer7/net/ipv4/netfilter/ip_conntrack_standalone.c	2005-01-04 15:21:20.000000000 -0600
++++ linux-2.6.10-layer7-clean/net/ipv4/netfilter/ip_conntrack_standalone.c	2005-01-07 13:26:59.000000000 -0600
 @@ -151,6 +151,12 @@ static int ct_seq_real_show(const struct
  		return 1;
  #endif
@@ -131,9 +130,9 @@ diff -Nurp linux-2.6.10-stock/net/ipv4/netfilter/ip_conntrack_standalone.c linux
  	if (seq_printf(s, "use=%u\n", atomic_read(&conntrack->ct_general.use)))
  		return 1;
  
-diff -Nurp linux-2.6.10-stock/net/ipv4/netfilter/ipt_layer7.c linux-2.6.10-layer7/net/ipv4/netfilter/ipt_layer7.c
+diff -Nurp linux-2.6.10-stock/net/ipv4/netfilter/ipt_layer7.c linux-2.6.10-layer7-clean/net/ipv4/netfilter/ipt_layer7.c
 --- linux-2.6.10-stock/net/ipv4/netfilter/ipt_layer7.c	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.10-layer7/net/ipv4/netfilter/ipt_layer7.c	2005-01-04 20:29:17.000000000 -0600
++++ linux-2.6.10-layer7-clean/net/ipv4/netfilter/ipt_layer7.c	2005-01-07 13:26:59.000000000 -0600
 @@ -0,0 +1,551 @@
 +/* 
 +  Kernel module to match application layer (OSI layer 7) 
@@ -686,9 +685,9 @@ diff -Nurp linux-2.6.10-stock/net/ipv4/netfilter/ipt_layer7.c linux-2.6.10-layer
 +
 +module_init(init);
 +module_exit(fini);
-diff -Nurp linux-2.6.10-stock/net/ipv4/netfilter/regexp/regexp.c linux-2.6.10-layer7/net/ipv4/netfilter/regexp/regexp.c
+diff -Nurp linux-2.6.10-stock/net/ipv4/netfilter/regexp/regexp.c linux-2.6.10-layer7-clean/net/ipv4/netfilter/regexp/regexp.c
 --- linux-2.6.10-stock/net/ipv4/netfilter/regexp/regexp.c	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.10-layer7/net/ipv4/netfilter/regexp/regexp.c	2005-01-04 13:29:01.000000000 -0600
++++ linux-2.6.10-layer7-clean/net/ipv4/netfilter/regexp/regexp.c	2005-01-07 13:26:59.000000000 -0600
 @@ -0,0 +1,1195 @@
 +/*
 + * regcomp and regexec -- regsub and regerror are elsewhere
@@ -1885,9 +1884,9 @@ diff -Nurp linux-2.6.10-stock/net/ipv4/netfilter/regexp/regexp.c linux-2.6.10-la
 +#endif
 +
 +
-diff -Nurp linux-2.6.10-stock/net/ipv4/netfilter/regexp/regexp.h linux-2.6.10-layer7/net/ipv4/netfilter/regexp/regexp.h
+diff -Nurp linux-2.6.10-stock/net/ipv4/netfilter/regexp/regexp.h linux-2.6.10-layer7-clean/net/ipv4/netfilter/regexp/regexp.h
 --- linux-2.6.10-stock/net/ipv4/netfilter/regexp/regexp.h	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.10-layer7/net/ipv4/netfilter/regexp/regexp.h	2005-01-04 13:29:01.000000000 -0600
++++ linux-2.6.10-layer7-clean/net/ipv4/netfilter/regexp/regexp.h	2005-01-07 13:26:59.000000000 -0600
 @@ -0,0 +1,27 @@
 +/*
 + * Definitions etc. for regexp(3) routines.
@@ -1916,18 +1915,18 @@ diff -Nurp linux-2.6.10-stock/net/ipv4/netfilter/regexp/regexp.h linux-2.6.10-la
 +void regerror(char *s);
 +
 +#endif
-diff -Nurp linux-2.6.10-stock/net/ipv4/netfilter/regexp/regmagic.h linux-2.6.10-layer7/net/ipv4/netfilter/regexp/regmagic.h
+diff -Nurp linux-2.6.10-stock/net/ipv4/netfilter/regexp/regmagic.h linux-2.6.10-layer7-clean/net/ipv4/netfilter/regexp/regmagic.h
 --- linux-2.6.10-stock/net/ipv4/netfilter/regexp/regmagic.h	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.10-layer7/net/ipv4/netfilter/regexp/regmagic.h	2005-01-04 13:29:01.000000000 -0600
++++ linux-2.6.10-layer7-clean/net/ipv4/netfilter/regexp/regmagic.h	2005-01-07 13:26:59.000000000 -0600
 @@ -0,0 +1,5 @@
 +/*
 + * The first byte of the regexp internal "program" is actually this magic
 + * number; the start node begins in the second byte.
 + */
 +#define	MAGIC	0234
-diff -Nurp linux-2.6.10-stock/net/ipv4/netfilter/regexp/regsub.c linux-2.6.10-layer7/net/ipv4/netfilter/regexp/regsub.c
+diff -Nurp linux-2.6.10-stock/net/ipv4/netfilter/regexp/regsub.c linux-2.6.10-layer7-clean/net/ipv4/netfilter/regexp/regsub.c
 --- linux-2.6.10-stock/net/ipv4/netfilter/regexp/regsub.c	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.10-layer7/net/ipv4/netfilter/regexp/regsub.c	2005-01-04 13:29:01.000000000 -0600
++++ linux-2.6.10-layer7-clean/net/ipv4/netfilter/regexp/regsub.c	2005-01-07 13:26:59.000000000 -0600
 @@ -0,0 +1,95 @@
 +/*
 + * regsub

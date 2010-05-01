@@ -1,3 +1,9 @@
+v1.0 - No changes to 2.4 version or iptables.  Shuffled around a bit of code
+in the 2.6 version so that it could patch cleanly to both 2.6.9 and 
+2.6.10.  Included the previous version of 2.6 patch so that people using 
+2.6.0-2.6.8 don't have to get an older package.
+
+
 v1.0-rc1 - No changes to the 2.4 version or iptables.  For 2.6:
 
 - Connections that have no match and are no longer being tested are now
@@ -7,6 +13,7 @@ marked "unknown".
 (CONFIG_IP_NF_CT_ACCT). 
 
 - Skbuffs are now linearized and error messages are net_ratelimited.
+
 
 v0.9.1 - Changes to ipt_helper.c that aren't part of l7-filter had crept
 into the 2.6 patch of v0.9.0.  They are now removed.  No other changes.
