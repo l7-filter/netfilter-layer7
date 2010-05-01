@@ -1,25 +1,51 @@
---- linux-2.6.17.6-stock/include/linux/netfilter_ipv4/ip_conntrack.h	2006-07-15 14:00:43.000000000 -0500
-+++ linux-2.6.17.6-layer7/include/linux/netfilter_ipv4/ip_conntrack.h	2006-07-15 17:55:25.000000000 -0500
-@@ -124,6 +124,15 @@ struct ip_conntrack
- 	/* Traversed often, so hopefully in different cacheline to top */
- 	/* These are my tuples; original and reply */
- 	struct ip_conntrack_tuple_hash tuplehash[IP_CT_DIR_MAX];
+diff -Nurp linux-2.4.31/Documentation/Configure.help linux-2.4.31-layer7/Documentation/Configure.help
+--- linux-2.4.31/Documentation/Configure.help	2005-04-03 20:42:19.000000000 -0500
++++ linux-2.4.31-layer7/Documentation/Configure.help	2005-09-12 00:40:58.000000000 -0500
+@@ -29056,6 +29056,18 @@ CONFIG_SOUND_WM97XX
+   
+   If unsure, say N.
+ 
++CONFIG_IP_NF_MATCH_LAYER7
++   Say Y if you want to be able to classify connections (and their 
++   packets) based on regular expression matching of their application 
++   layer data.   This is one way to classify applications such as 
++   peer-to-peer filesharing systems that do not always use the same 
++   port.
 +
++   To compile it as a module, choose M here.  If unsure, say N.
++
++CONFIG_IP_NF_MATCH_LAYER7_DEBUG
++   Say Y to get lots of debugging output.
++
+ #
+ # A couple of things I keep forgetting:
+ #   capitalize: AppleTalk, Ethernet, DOS, DMA, FAT, FTP, Internet,
+diff -Nurp linux-2.4.31/include/linux/netfilter_ipv4/ip_conntrack.h linux-2.4.31-layer7/include/linux/netfilter_ipv4/ip_conntrack.h
+--- linux-2.4.31/include/linux/netfilter_ipv4/ip_conntrack.h	2005-04-03 20:42:20.000000000 -0500
++++ linux-2.4.31-layer7/include/linux/netfilter_ipv4/ip_conntrack.h	2005-09-12 00:49:01.000000000 -0500
+@@ -207,6 +207,17 @@ struct ip_conntrack
+ 	} nat;
+ #endif /* CONFIG_IP_NF_NAT_NEEDED */
+ 
 +#if defined(CONFIG_IP_NF_MATCH_LAYER7) || defined(CONFIG_IP_NF_MATCH_LAYER7_MODULE)
-+        struct {
-+                char * app_proto; /* e.g. "http". NULL before decision. "unknown" after decision if no match */
-+                char * app_data;  /* application layer data so far.  NULL after match decision */
-+                unsigned int app_data_len;
-+        } layer7;
-+#endif
++	struct {
++		unsigned int numpackets; /* surely this is kept track of somewhere else, right? I can't find it... */
++		char * app_proto; /* "http", "ftp", etc.  NULL if unclassifed */
++		
++		/* the application layer data so far.  NULL if ->numpackets > numpackets */
++		char * app_data; 
 +
++		unsigned int app_data_len;
++	} layer7;
++#endif
  };
  
- struct ip_conntrack_expect
---- linux-2.6.17.6-stock/include/linux/netfilter_ipv4/ipt_layer7.h	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.17.6-layer7/include/linux/netfilter_ipv4/ipt_layer7.h	2006-08-03 21:31:55.000000000 -0500
+ /* get master conntrack via master expectation */
+diff -Nurp linux-2.4.31/include/linux/netfilter_ipv4/ipt_layer7.h linux-2.4.31-layer7/include/linux/netfilter_ipv4/ipt_layer7.h
+--- linux-2.4.31/include/linux/netfilter_ipv4/ipt_layer7.h	1969-12-31 18:00:00.000000000 -0600
++++ linux-2.4.31-layer7/include/linux/netfilter_ipv4/ipt_layer7.h	2005-09-01 00:17:13.000000000 -0500
 @@ -0,0 +1,26 @@
-+/*
++/* 
 +  By Matthew Strait <quadong@users.sf.net>, Dec 2003.
 +  http://l7-filter.sf.net
 +
@@ -45,82 +71,73 @@
 +};
 +
 +#endif /* _IPT_LAYER7_H */
---- linux-2.6.17.6-stock/net/ipv4/netfilter/Kconfig	2006-07-15 14:00:43.000000000 -0500
-+++ linux-2.6.17.6-layer7/net/ipv4/netfilter/Kconfig	2006-08-03 21:32:31.000000000 -0500
-@@ -222,6 +222,24 @@ config IP_NF_MATCH_IPRANGE
- 
- 	  To compile it as a module, choose M here.  If unsure, say N.
- 
-+config IP_NF_MATCH_LAYER7
-+	tristate "Layer 7 match support (EXPERIMENTAL)"
-+	depends on IP_NF_IPTABLES && IP_NF_CT_ACCT && IP_NF_CONNTRACK && EXPERIMENTAL
-+	help
-+	  Say Y if you want to be able to classify connections (and their
-+	  packets) based on regular expression matching of their application
-+	  layer data.   This is one way to classify applications such as
-+	  peer-to-peer filesharing systems that do not always use the same
-+	  port.
-+
-+	  To compile it as a module, choose M here.  If unsure, say N.
-+
-+config IP_NF_MATCH_LAYER7_DEBUG
-+	bool "Layer 7 debugging output"
-+	depends on IP_NF_MATCH_LAYER7
-+	help
-+	  Say Y to get lots of debugging output.
-+
- config IP_NF_MATCH_TOS
- 	tristate "TOS match support"
- 	depends on IP_NF_IPTABLES
---- linux-2.6.17.6-stock/net/ipv4/netfilter/Makefile	2006-07-15 14:00:43.000000000 -0500
-+++ linux-2.6.17.6-layer7/net/ipv4/netfilter/Makefile	2006-07-15 17:55:25.000000000 -0500
-@@ -62,6 +62,8 @@ obj-$(CONFIG_IP_NF_MATCH_AH) += ipt_ah.o
- obj-$(CONFIG_IP_NF_MATCH_TTL) += ipt_ttl.o
- obj-$(CONFIG_IP_NF_MATCH_ADDRTYPE) += ipt_addrtype.o
- 
+diff -Nurp linux-2.4.31/net/ipv4/netfilter/Config.in linux-2.4.31-layer7/net/ipv4/netfilter/Config.in
+--- linux-2.4.31/net/ipv4/netfilter/Config.in	2005-01-19 08:10:13.000000000 -0600
++++ linux-2.4.31-layer7/net/ipv4/netfilter/Config.in	2005-09-12 00:40:58.000000000 -0500
+@@ -43,6 +43,9 @@ if [ "$CONFIG_IP_NF_IPTABLES" != "n" ]; 
+   if [ "$CONFIG_EXPERIMENTAL" = "y" ]; then
+     dep_tristate '  Unclean match support (EXPERIMENTAL)' CONFIG_IP_NF_MATCH_UNCLEAN $CONFIG_IP_NF_IPTABLES
+     dep_tristate '  Owner match support (EXPERIMENTAL)' CONFIG_IP_NF_MATCH_OWNER $CONFIG_IP_NF_IPTABLES
++    dep_tristate '  Layer 7 match support (EXPERIMENTAL)' CONFIG_IP_NF_MATCH_LAYER7 $CONFIG_IP_NF_CONNTRACK
++    dep_mbool '  Layer 7 debugging output (EXPERIMENTAL)' CONFIG_IP_NF_MATCH_LAYER7_DEBUG $CONFIG_IP_NF_MATCH_LAYER7
++ 
+   fi
+ # The targets
+   dep_tristate '  Packet filtering' CONFIG_IP_NF_FILTER $CONFIG_IP_NF_IPTABLES 
+diff -Nurp linux-2.4.31/net/ipv4/netfilter/Makefile linux-2.4.31-layer7/net/ipv4/netfilter/Makefile
+--- linux-2.4.31/net/ipv4/netfilter/Makefile	2003-08-25 06:44:44.000000000 -0500
++++ linux-2.4.31-layer7/net/ipv4/netfilter/Makefile	2005-09-01 00:17:13.000000000 -0500
+@@ -86,6 +86,7 @@ obj-$(CONFIG_IP_NF_MATCH_STATE) += ipt_s
+ obj-$(CONFIG_IP_NF_MATCH_CONNTRACK) += ipt_conntrack.o
+ obj-$(CONFIG_IP_NF_MATCH_UNCLEAN) += ipt_unclean.o
+ obj-$(CONFIG_IP_NF_MATCH_TCPMSS) += ipt_tcpmss.o
 +obj-$(CONFIG_IP_NF_MATCH_LAYER7) += ipt_layer7.o
-+
+ 
  # targets
  obj-$(CONFIG_IP_NF_TARGET_REJECT) += ipt_REJECT.o
- obj-$(CONFIG_IP_NF_TARGET_TOS) += ipt_TOS.o
---- linux-2.6.17.6-stock/net/ipv4/netfilter/ip_conntrack_core.c	2006-07-15 14:00:43.000000000 -0500
-+++ linux-2.6.17.6-layer7/net/ipv4/netfilter/ip_conntrack_core.c	2006-07-15 17:55:25.000000000 -0500
-@@ -339,6 +339,13 @@ destroy_conntrack(struct nf_conntrack *n
- 	 * too. */
- 	ip_ct_remove_expectations(ct);
- 
+diff -Nurp linux-2.4.31/net/ipv4/netfilter/ip_conntrack_core.c linux-2.4.31-layer7/net/ipv4/netfilter/ip_conntrack_core.c
+--- linux-2.4.31/net/ipv4/netfilter/ip_conntrack_core.c	2005-04-03 20:42:20.000000000 -0500
++++ linux-2.4.31-layer7/net/ipv4/netfilter/ip_conntrack_core.c	2005-09-01 00:17:13.000000000 -0500
+@@ -346,6 +346,14 @@ destroy_conntrack(struct nf_conntrack *n
+ 		}
+ 		kfree(ct->master);
+ 	}
++
 +	#if defined(CONFIG_IP_NF_MATCH_LAYER7) || defined(CONFIG_IP_NF_MATCH_LAYER7_MODULE)
 +	if(ct->layer7.app_proto)
 +		kfree(ct->layer7.app_proto);
 +	if(ct->layer7.app_data)
 +		kfree(ct->layer7.app_data);
 +	#endif
-+
- 	/* We overload first tuple to link into unconfirmed list. */
- 	if (!is_confirmed(ct)) {
- 		BUG_ON(list_empty(&ct->tuplehash[IP_CT_DIR_ORIGINAL].list));
---- linux-2.6.17.6-stock/net/ipv4/netfilter/ip_conntrack_standalone.c	2006-07-15 14:00:43.000000000 -0500
-+++ linux-2.6.17.6-layer7/net/ipv4/netfilter/ip_conntrack_standalone.c	2006-07-15 17:55:25.000000000 -0500
-@@ -189,6 +189,12 @@ static int ct_seq_show(struct seq_file *
- 		return -ENOSPC;
- #endif
++	
+ 	WRITE_UNLOCK(&ip_conntrack_lock);
  
-+#if defined(CONFIG_IP_NF_MATCH_LAYER7) || defined(CONFIG_IP_NF_MATCH_LAYER7_MODULE)
+ 	if (master)
+diff -Nurp linux-2.4.31/net/ipv4/netfilter/ip_conntrack_standalone.c linux-2.4.31-layer7/net/ipv4/netfilter/ip_conntrack_standalone.c
+--- linux-2.4.31/net/ipv4/netfilter/ip_conntrack_standalone.c	2005-04-03 20:42:20.000000000 -0500
++++ linux-2.4.31-layer7/net/ipv4/netfilter/ip_conntrack_standalone.c	2005-09-01 00:17:13.000000000 -0500
+@@ -107,6 +107,13 @@ print_conntrack(char *buffer, struct ip_
+ 		len += sprintf(buffer + len, "[ASSURED] ");
+ 	len += sprintf(buffer + len, "use=%u ",
+ 		       atomic_read(&conntrack->ct_general.use));
++
++	#if defined(CONFIG_IP_NF_MATCH_LAYER7) || defined(CONFIG_IP_NF_MATCH_LAYER7_MODULE)
 +	if(conntrack->layer7.app_proto)
-+		if (seq_printf(s, "l7proto=%s ",conntrack->layer7.app_proto))
-+			return 1;
-+#endif
++		len += sprintf(buffer + len, "l7proto=%s ",
++				conntrack->layer7.app_proto); 
++	#endif
 +
- 	if (seq_printf(s, "use=%u\n", atomic_read(&conntrack->ct_general.use)))
- 		return -ENOSPC;
+ 	len += sprintf(buffer + len, "\n");
  
---- linux-2.6.17.6-stock/net/ipv4/netfilter/ipt_layer7.c	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.17.6-layer7/net/ipv4/netfilter/ipt_layer7.c	2006-09-02 16:28:26.000000000 -0500
-@@ -0,0 +1,576 @@
-+/*
-+  Kernel module to match application layer (OSI layer 7)
+ 	return len;
+diff -Nurp linux-2.4.31/net/ipv4/netfilter/ipt_layer7.c linux-2.4.31-layer7/net/ipv4/netfilter/ipt_layer7.c
+--- linux-2.4.31/net/ipv4/netfilter/ipt_layer7.c	1969-12-31 18:00:00.000000000 -0600
++++ linux-2.4.31-layer7/net/ipv4/netfilter/ipt_layer7.c	2005-09-12 01:13:36.000000000 -0500
+@@ -0,0 +1,570 @@
++/* 
++  Kernel module to match application layer (OSI layer 7) 
 +  data in connections.
-+
++  
 +  http://l7-filter.sf.net
 +
 +  By Matthew Strait and Ethan Sommer, 2003-2005.
@@ -142,7 +159,7 @@
 +#include <linux/ctype.h>
 +#include <net/ip.h>
 +#include <net/tcp.h>
-+#include <linux/spinlock.h>
++#include <linux/netfilter_ipv4/lockhelp.h>
 +
 +#include "regexp/regexp.c"
 +
@@ -152,20 +169,18 @@
 +MODULE_AUTHOR("Matthew Strait <quadong@users.sf.net>, Ethan Sommer <sommere@users.sf.net>");
 +MODULE_LICENSE("GPL");
 +MODULE_DESCRIPTION("iptables application layer match module");
-+MODULE_VERSION("2.0");
 +
 +static int maxdatalen = 2048; // this is the default
-+module_param(maxdatalen, int, 0444);
-+MODULE_PARM_DESC(maxdatalen, "maximum bytes of data looked at by l7-filter");
++MODULE_PARM(maxdatalen,"i");
++MODULE_PARM_DESC(maxdatalen,"maximum bytes of data looked at by l7-filter");
 +
-+#ifdef CONFIG_IP_NF_MATCH_LAYER7_DEBUG
++#if defined(CONFIG_IP_NF_MATCH_LAYER7_DEBUG)
 +	#define DPRINTK(format,args...) printk(format,##args)
 +#else
 +	#define DPRINTK(format,args...)
 +#endif
 +
-+#define TOTAL_PACKETS master_conntrack->counters[IP_CT_DIR_ORIGINAL].packets + \
-+		      master_conntrack->counters[IP_CT_DIR_REPLY].packets
++#define TOTAL_PACKETS master_conntrack->layer7.numpackets
 +
 +/* Number of packets whose data we look at.
 +This can be modified through /proc/net/layer7_numpackets */
@@ -179,24 +194,24 @@
 +
 +/* I'm new to locking.  Here are my assumptions:
 +
-+- No one will write to /proc/net/layer7_numpackets over and over very fast;
++- No one will write to /proc/net/layer7_numpackets over and over very fast; 
 +  if they did, nothing awful would happen.
 +
 +- This code will never be processing the same packet twice at the same time,
 +  because iptables rules are traversed in order.
 +
-+- It doesn't matter if two packets from different connections are in here at
++- It doesn't matter if two packets from different connections are in here at 
 +  the same time, because they don't share any data.
 +
-+- It _does_ matter if two packets from the same connection (or one from a
-+  master and one from its child) are here at the same time.  In this case,
-+  we have to protect the conntracks and the list of compiled patterns.
++- It _does_ matter if two packets from the same connection are here at the same
++  time.  In this case, we have to protect the conntracks and the list of 
++  compiled patterns.
 +*/
-+DEFINE_RWLOCK(ct_lock);
-+DEFINE_SPINLOCK(list_lock);
++DECLARE_RWLOCK(ct_lock);
++DECLARE_LOCK(list_lock);
 +
-+#ifdef CONFIG_IP_NF_MATCH_LAYER7_DEBUG
-+/* Converts an unfriendly string into a friendly one by
++#if CONFIG_IP_NF_MATCH_LAYER7_DEBUG
++/* Converts an unfriendly string into a friendly one by 
 +replacing unprintables with periods and all whitespace with " ". */
 +static char * friendly_print(unsigned char * s)
 +{
@@ -204,7 +219,7 @@
 +	int i;
 +
 +	if(!f) {
-+		if (net_ratelimit())
++		if (net_ratelimit()) 
 +			printk(KERN_ERR "layer7: out of memory in friendly_print, bailing.\n");
 +		return NULL;
 +	}
@@ -228,7 +243,7 @@
 +			return (char)(i - 10 + 'a');
 +			break;
 +		default:
-+			if (net_ratelimit())
++			if (net_ratelimit()) 
 +				printk("Problem in dec2hex\n");
 +			return '\0';
 +	}
@@ -240,9 +255,9 @@
 +	int i;
 +
 +	if(!g) {
-+	       if (net_ratelimit())
++		if (net_ratelimit()) 
 +			printk(KERN_ERR "layer7: out of memory in hex_print, bailing.\n");
-+	       return NULL;
++		return NULL;
 +	}
 +
 +	for(i = 0; i < strlen(s); i++) {
@@ -258,7 +273,7 @@
 +
 +/* Use instead of regcomp.  As we expect to be seeing the same regexps over and
 +over again, it make sense to cache the results. */
-+static regexp * compile_and_cache(char * regex_string, char * protocol)
++static regexp * compile_and_cache(char * regex_string, char * protocol) 
 +{
 +	struct pattern_cache * node               = first_pattern_cache;
 +	struct pattern_cache * last_pattern_cache = first_pattern_cache;
@@ -266,20 +281,20 @@
 +	unsigned int len;
 +
 +	while (node != NULL) {
-+		if (!strcmp(node->regex_string, regex_string))
-+		return node->pattern;
++		if (!strcmp(node->regex_string, regex_string)) 
++			return node->pattern;
 +
 +		last_pattern_cache = node;/* points at the last non-NULL node */
 +		node = node->next;
 +	}
 +
 +	/* If we reach the end of the list, then we have not yet cached
-+	   the pattern for this regex. Let's do that now.
++	   the pattern for this regex. Let's do that now. 
 +	   Be paranoid about running out of memory to avoid list corruption. */
 +	tmp = kmalloc(sizeof(struct pattern_cache), GFP_ATOMIC);
 +
 +	if(!tmp) {
-+		if (net_ratelimit())
++		if (net_ratelimit()) 
 +			printk(KERN_ERR "layer7: out of memory in compile_and_cache, bailing.\n");
 +		return NULL;
 +	}
@@ -289,7 +304,7 @@
 +	tmp->next = NULL;
 +
 +	if(!tmp->regex_string || !tmp->pattern) {
-+		if (net_ratelimit())
++		if (net_ratelimit()) 
 +			printk(KERN_ERR "layer7: out of memory in compile_and_cache, bailing.\n");
 +		kfree(tmp->regex_string);
 +		kfree(tmp->pattern);
@@ -310,7 +325,7 @@
 +	DPRINTK("About to compile this: \"%s\"\n", regex_string);
 +	node->pattern = regcomp(regex_string, &len);
 +	if ( !node->pattern ) {
-+		if (net_ratelimit())
++		if (net_ratelimit()) 
 +			printk(KERN_ERR "layer7: Error compiling regexp \"%s\" (%s)\n", regex_string, protocol);
 +		/* pattern is now cached as NULL, so we won't try again. */
 +	}
@@ -333,14 +348,14 @@
 +/* Returns offset the into the skb->data that the application data starts */
 +static int app_data_offset(const struct sk_buff *skb)
 +{
-+	/* In case we are ported somewhere (ebtables?) where skb->nh.iph
++	/* In case we are ported somewhere (ebtables?) where skb->nh.iph 
 +	isn't set, this can be gotten from 4*(skb->data[0] & 0x0f) as well. */
 +	int ip_hl = 4*skb->nh.iph->ihl;
 +
 +	if( skb->nh.iph->protocol == IPPROTO_TCP ) {
-+		/* 12 == offset into TCP header for the header length field.
-+		Can't get this with skb->h.th->doff because the tcphdr
-+		struct doesn't get set when routing (this is confirmed to be
++		/* 12 == offset into TCP header for the header length field. 
++		Can't get this with skb->h.th->doff because the tcphdr 
++		struct doesn't get set when routing (this is confirmed to be 
 +		true in Netfilter as well as QoS.) */
 +		int tcp_hl = 4*(skb->data[ip_hl + 12] >> 4);
 +
@@ -350,7 +365,7 @@
 +	} else if( skb->nh.iph->protocol == IPPROTO_ICMP ) {
 +		return ip_hl + 8; /* ICMP header is 8 bytes */
 +	} else {
-+		if (net_ratelimit())
++		if (net_ratelimit()) 
 +			printk(KERN_ERR "layer7: tried to handle unknown protocol!\n");
 +		return ip_hl + 8; /* something reasonable */
 +	}
@@ -362,7 +377,7 @@
 +			struct ipt_layer7_info * info)
 +{
 +	/* If we're in here, throw the app data away */
-+	write_lock(&ct_lock);
++	WRITE_LOCK(&ct_lock);
 +	if(master_conntrack->layer7.app_data != NULL) {
 +
 +	#ifdef CONFIG_IP_NF_MATCH_LAYER7_DEBUG
@@ -370,8 +385,9 @@
 +			char * f = friendly_print(master_conntrack->layer7.app_data);
 +			char * g = hex_print(master_conntrack->layer7.app_data);
 +			DPRINTK("\nl7-filter gave up after %d bytes (%d packets):\n%s\n",
-+				strlen(f), TOTAL_PACKETS, f);
-+			kfree(f);
++				strlen(f), 
++				TOTAL_PACKETS, f);
++			kfree(f); 
 +			DPRINTK("In hex: %s\n", g);
 +			kfree(g);
 +		}
@@ -380,44 +396,44 @@
 +		kfree(master_conntrack->layer7.app_data);
 +		master_conntrack->layer7.app_data = NULL; /* don't free again */
 +	}
-+	write_unlock(&ct_lock);
++	WRITE_UNLOCK(&ct_lock);
 +
 +	if(master_conntrack->layer7.app_proto){
 +		/* Here child connections set their .app_proto (for /proc/net/ip_conntrack) */
-+		write_lock(&ct_lock);
++		WRITE_LOCK(&ct_lock);
 +		if(!conntrack->layer7.app_proto) {
 +			conntrack->layer7.app_proto = kmalloc(strlen(master_conntrack->layer7.app_proto)+1, GFP_ATOMIC);
 +			if(!conntrack->layer7.app_proto){
-+				if (net_ratelimit())
++				if (net_ratelimit()) 
 +					printk(KERN_ERR "layer7: out of memory in match_no_append, bailing.\n");
-+				write_unlock(&ct_lock);
++				WRITE_UNLOCK(&ct_lock);
 +				return 1;
 +			}
 +			strcpy(conntrack->layer7.app_proto, master_conntrack->layer7.app_proto);
 +		}
-+		write_unlock(&ct_lock);
-+
++		WRITE_UNLOCK(&ct_lock);
++	
 +		return (!strcmp(master_conntrack->layer7.app_proto, info->protocol));
 +	}
 +	else {
-+		/* If not classified, set to "unknown" to distinguish from
++		/* If not classified, set to "unknown" to distinguish from 
 +		connections that are still being tested. */
-+		write_lock(&ct_lock);
++		WRITE_LOCK(&ct_lock);
 +		master_conntrack->layer7.app_proto = kmalloc(strlen("unknown")+1, GFP_ATOMIC);
 +		if(!master_conntrack->layer7.app_proto){
-+			if (net_ratelimit())
++			if (net_ratelimit()) 
 +				printk(KERN_ERR "layer7: out of memory in match_no_append, bailing.\n");
-+			write_unlock(&ct_lock);
++			WRITE_UNLOCK(&ct_lock);
 +			return 1;
 +		}
 +		strcpy(master_conntrack->layer7.app_proto, "unknown");
-+		write_unlock(&ct_lock);
++		WRITE_UNLOCK(&ct_lock);
 +		return 0;
 +	}
 +}
 +
 +/* add the new app data to the conntrack.  Return number of bytes added. */
-+static int add_data(struct ip_conntrack * master_conntrack,
++static int add_data(struct ip_conntrack * master_conntrack, 
 +			char * app_data, int appdatalen)
 +{
 +	int length = 0, i;
@@ -425,10 +441,9 @@
 +
 +	/* Strip nulls. Make everything lower case (our regex lib doesn't
 +	do case insensitivity).  Add it to the end of the current data. */
-+	for(i = 0; i < maxdatalen-oldlength-1 &&
-+		   i < appdatalen; i++) {
++	for(i = 0; i < maxdatalen-oldlength-1 && i < appdatalen; i++) {
 +		if(app_data[i] != '\0') {
-+			master_conntrack->layer7.app_data[length+oldlength] =
++			master_conntrack->layer7.app_data[length+oldlength] = 
 +				/* the kernel version of tolower mungs 'upper ascii' */
 +				isascii(app_data[i])? tolower(app_data[i]) : app_data[i];
 +			length++;
@@ -442,15 +457,14 @@
 +}
 +
 +/* Returns true on match and false otherwise.  */
-+static int match(/* const */ struct sk_buff *skb,
-+	const struct net_device *in, const struct net_device *out,
-+	const struct xt_match *match, const void *matchinfo,
-+	int offset, unsigned int protoff, int *hotdrop)
++static int match(/* const */struct sk_buff *skb, const struct net_device *in,
++		 const struct net_device *out, const void *matchinfo,
++		 int offset,		   int *hotdrop)
 +{
 +	struct ipt_layer7_info * info = (struct ipt_layer7_info *)matchinfo;
 +	enum ip_conntrack_info master_ctinfo, ctinfo;
 +	struct ip_conntrack *master_conntrack, *conntrack;
-+	unsigned char * app_data;
++	unsigned char * app_data;  
 +	unsigned int pattern_result, appdatalen;
 +	regexp * comppattern;
 +
@@ -459,26 +473,33 @@
 +		return info->invert;
 +	}
 +
-+	/* Treat parent & all its children together as one connection, except
-+	for the purpose of setting conntrack->layer7.app_proto in the actual
-+	connection. This makes /proc/net/ip_conntrack more satisfying. */
-+	if(!(conntrack = ip_conntrack_get((struct sk_buff *)skb, &ctinfo)) ||
++	/* Treat the parent and all its children together as one connection, 
++	except for the purpose of setting conntrack->layer7.app_proto in the 
++	actual connection. This makes /proc/net/ip_conntrack somewhat more 
++	satisfying. */
++	if(!(conntrack	= ip_conntrack_get((struct sk_buff *)skb, &ctinfo)) ||
 +	   !(master_conntrack = ip_conntrack_get((struct sk_buff *)skb, &master_ctinfo))) {
-+		//DPRINTK("layer7: packet is not from a known connection, giving up.\n");
++		DPRINTK("layer7: packet is not from a known connection, giving up.\n");
 +		return info->invert;
 +	}
-+
++	
 +	/* Try to get a master conntrack (and its master etc) for FTP, etc. */
 +	while (master_ct(master_conntrack) != NULL)
 +		master_conntrack = master_ct(master_conntrack);
 +
++	if(!skb->cb[0]){
++		WRITE_LOCK(&ct_lock);
++		master_conntrack->layer7.numpackets++;/*starts at 0 via memset*/
++		WRITE_UNLOCK(&ct_lock);
++	}
++
 +	/* if we've classified it or seen too many packets */
-+	if(TOTAL_PACKETS > num_packets ||
++	if(TOTAL_PACKETS > num_packets || 
 +	   master_conntrack->layer7.app_proto) {
-+
++	
 +		pattern_result = match_no_append(conntrack, master_conntrack, ctinfo, master_ctinfo, info);
-+
-+		/* skb->cb[0] == seen. Avoid doing things twice if there are two l7
++	
++		/* skb->cb[0] == seen. Avoid doing things twice if there are two l7 
 +		rules. I'm not sure that using cb for this purpose is correct, although
 +		it says "put your private variables there". But it doesn't look like it
 +		is being used for anything else in the skbs that make it here. How can
@@ -490,46 +511,46 @@
 +
 +	if(skb_is_nonlinear(skb)){
 +		if(skb_linearize(skb, GFP_ATOMIC) != 0){
-+			if (net_ratelimit())
++			if (net_ratelimit()) 
 +				printk(KERN_ERR "layer7: failed to linearize packet, bailing.\n");
 +			return info->invert;
 +		}
 +	}
-+
++	
 +	/* now that the skb is linearized, it's safe to set these. */
 +	app_data = skb->data + app_data_offset(skb);
 +	appdatalen = skb->tail - app_data;
 +
-+	spin_lock_bh(&list_lock);
++	LOCK_BH(&list_lock);
 +	/* the return value gets checked later, when we're ready to use it */
 +	comppattern = compile_and_cache(info->pattern, info->protocol);
-+	spin_unlock_bh(&list_lock);
++	UNLOCK_BH(&list_lock);
 +
 +	/* On the first packet of a connection, allocate space for app data */
-+	write_lock(&ct_lock);
++	WRITE_LOCK(&ct_lock);
 +	if(TOTAL_PACKETS == 1 && !skb->cb[0] && !master_conntrack->layer7.app_data) {
 +		master_conntrack->layer7.app_data = kmalloc(maxdatalen, GFP_ATOMIC);
 +		if(!master_conntrack->layer7.app_data){
 +			if (net_ratelimit())
 +				printk(KERN_ERR "layer7: out of memory in match, bailing.\n");
-+			write_unlock(&ct_lock);
++			WRITE_UNLOCK(&ct_lock);
 +			return info->invert;
 +		}
 +
 +		master_conntrack->layer7.app_data[0] = '\0';
 +	}
-+	write_unlock(&ct_lock);
++	WRITE_UNLOCK(&ct_lock);
 +
-+	/* Can be here, but unallocated, if numpackets is increased near
++	/* Can be here, but unallocated, if numpackets is increased near 
 +	the beginning of a connection */
 +	if(master_conntrack->layer7.app_data == NULL)
 +		return (info->invert); /* unmatched */
 +
 +	if(!skb->cb[0]){
 +		int newbytes;
-+		write_lock(&ct_lock);
++		WRITE_LOCK(&ct_lock);
 +		newbytes = add_data(master_conntrack, app_data, appdatalen);
-+		write_unlock(&ct_lock);
++		WRITE_UNLOCK(&ct_lock);
 +
 +		if(newbytes == 0) { /* didn't add any data */
 +			skb->cb[0] = 1;
@@ -540,27 +561,25 @@
 +
 +	/* If looking for "unknown", then never match.  "Unknown" means that
 +	we've given up; we're still trying with these packets. */
-+	read_lock(&ct_lock);
 +	if(!strcmp(info->protocol, "unknown")) {
 +		pattern_result = 0;
 +	/* If the regexp failed to compile, don't bother running it */
 +	} else if(comppattern && regexec(comppattern, master_conntrack->layer7.app_data)) {
-+		DPRINTK("layer7: matched %s\n", info->protocol);
++		DPRINTK("layer7: regexec positive: %s!\n", info->protocol);
 +		pattern_result = 1;
 +	} else pattern_result = 0;
-+	read_unlock(&ct_lock);
 +
 +	if(pattern_result) {
-+		write_lock(&ct_lock);
++		WRITE_LOCK(&ct_lock);
 +		master_conntrack->layer7.app_proto = kmalloc(strlen(info->protocol)+1, GFP_ATOMIC);
 +		if(!master_conntrack->layer7.app_proto){
-+			if (net_ratelimit())
++			if (net_ratelimit()) 
 +				printk(KERN_ERR "layer7: out of memory in match, bailing.\n");
-+			write_unlock(&ct_lock);
++			WRITE_UNLOCK(&ct_lock);
 +			return (pattern_result ^ info->invert);
 +		}
 +		strcpy(master_conntrack->layer7.app_proto, info->protocol);
-+		write_unlock(&ct_lock);
++		WRITE_UNLOCK(&ct_lock);
 +	}
 +
 +	/* mark the packet seen */
@@ -569,24 +588,19 @@
 +	return (pattern_result ^ info->invert);
 +}
 +
-+static int checkentry(const char *tablename, const void *ip,
-+	const struct xt_match *match, void *matchinfo, unsigned int matchsize,
-+	unsigned int hook_mask)
++static int checkentry(const char *tablename, const struct ipt_ip *ip,
++	   void *matchinfo, unsigned int matchsize, unsigned int hook_mask)
 +{
-+//        struct ipt_layer7_info * info = (struct ipt_layer7_info *)matchinfo;
-+
-+	if (matchsize != IPT_ALIGN(sizeof(struct ipt_layer7_info)))
++	if (matchsize != IPT_ALIGN(sizeof(struct ipt_layer7_info))) 
 +		return 0;
-+
 +	return 1;
 +}
 +
-+static struct ipt_match layer7_match = {
-+	.name = "layer7",
-+	.match = &match,
-+	.checkentry = &checkentry,
-+	.matchsize  = sizeof(struct ipt_layer7_info),
-+	.me = THIS_MODULE
++static struct ipt_match layer7_match = { 
++	.name = "layer7", 
++	.match = &match, 
++	.checkentry = &checkentry, 
++	.me = THIS_MODULE 
 +};
 +
 +/* taken from drivers/video/modedb.c */
@@ -596,7 +610,7 @@
 +
 +	for (;; s++) {
 +		switch (*s) {
-+			case '0'...'9':
++		case '0'...'9':
 +			val = 10*val+(*s-'0');
 +			break;
 +		default:
@@ -606,43 +620,40 @@
 +}
 +
 +/* write out num_packets to userland. */
-+static int layer7_read_proc(char* page, char ** start, off_t off, int count,
-+		     int* eof, void * data)
++static int layer7_read_proc(char* page, char ** start, off_t off, int count, 
++		     int* eof, void * data) 
 +{
-+	if(num_packets > 99 && net_ratelimit())
++	if(num_packets > 99 && net_ratelimit()) 
 +		printk(KERN_ERR "layer7: NOT REACHED. num_packets too big\n");
-+
++	
 +	page[0] = num_packets/10 + '0';
 +	page[1] = num_packets%10 + '0';
 +	page[2] = '\n';
 +	page[3] = '\0';
-+
++		
 +	*eof=1;
 +
 +	return 3;
 +}
 +
 +/* Read in num_packets from userland */
-+static int layer7_write_proc(struct file* file, const char* buffer,
-+		      unsigned long count, void *data)
++static int layer7_write_proc(struct file* file, const char* buffer, 
++		      unsigned long count, void *data) 
 +{
 +	char * foo = kmalloc(count, GFP_ATOMIC);
 +
 +	if(!foo){
-+		if (net_ratelimit())
++		if (net_ratelimit()) 
 +			printk(KERN_ERR "layer7: out of memory, bailing. num_packets unchanged.\n");
 +		return count;
 +	}
 +
-+	if(copy_from_user(foo, buffer, count)) {
-+		return -EFAULT;
-+	}
-+
++	copy_from_user(foo, buffer, count);
 +
 +	num_packets = my_atoi(foo);
 +	kfree (foo);
 +
-+	/* This has an arbitrary limit to make the math easier. I'm lazy.
++	/* This has an arbitrary limit to make the math easier. I'm lazy. 
 +	But anyway, 99 is a LOT! If you want more, you're doing it wrong! */
 +	if(num_packets > 99) {
 +		printk(KERN_WARNING "layer7: num_packets can't be > 99.\n");
@@ -651,7 +662,7 @@
 +		printk(KERN_WARNING "layer7: num_packets can't be < 1.\n");
 +		num_packets = 1;
 +	}
-+
++	
 +	return count;
 +}
 +
@@ -669,33 +680,34 @@
 +	remove_proc_entry("layer7_numpackets", proc_net);
 +}
 +
-+static int __init ipt_layer7_init(void)
++static int __init init(void)
 +{
 +	layer7_init_proc();
 +	if(maxdatalen < 1) {
 +		printk(KERN_WARNING "layer7: maxdatalen can't be < 1, using 1\n");
 +		maxdatalen = 1;
 +	}
-+	/* This is not a hard limit.  It's just here to prevent people from
++	/* This is not a hard limit.  It's just here to prevent people from     
 +	bringing their slow machines to a grinding halt. */
 +	else if(maxdatalen > 65536) {
 +		printk(KERN_WARNING "layer7: maxdatalen can't be > 65536, using 65536\n");
-+		maxdatalen = 65536;
++		maxdatalen = 65536;             
 +	}
 +	return ipt_register_match(&layer7_match);
 +}
 +
-+static void __exit ipt_layer7_fini(void)
++static void __exit fini(void)
 +{
 +	layer7_cleanup_proc();
 +	ipt_unregister_match(&layer7_match);
 +}
 +
-+module_init(ipt_layer7_init);
-+module_exit(ipt_layer7_fini);
---- linux-2.6.17.6-stock/net/ipv4/netfilter/regexp/regexp.c	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.17.6-layer7/net/ipv4/netfilter/regexp/regexp.c	2006-09-02 16:29:16.000000000 -0500
-@@ -0,0 +1,1197 @@
++module_init(init);
++module_exit(fini);
+diff -Nurp linux-2.4.31/net/ipv4/netfilter/regexp/regexp.c linux-2.4.31-layer7/net/ipv4/netfilter/regexp/regexp.c
+--- linux-2.4.31/net/ipv4/netfilter/regexp/regexp.c	1969-12-31 18:00:00.000000000 -0600
++++ linux-2.4.31-layer7/net/ipv4/netfilter/regexp/regexp.c	2005-09-01 00:17:13.000000000 -0500
+@@ -0,0 +1,1195 @@
 +/*
 + * regcomp and regexec -- regsub and regerror are elsewhere
 + * @(#)regexp.c	1.3 of 18 April 87
@@ -723,7 +735,7 @@
 + *
 + * This code was modified by Ethan Sommer to work within the kernel
 + * (it now uses kmalloc etc..)
-+ *
++ * 
 + * Modified slightly by Matthew Strait to use more modern C.
 + */
 +
@@ -862,17 +874,11 @@
 +/*
 + * Global work variables for regcomp().
 + */
-+struct match_globals {
-+char *reginput;		/* String-input pointer. */
-+char *regbol;		/* Beginning of input, for ^ check. */
-+char **regstartp;	/* Pointer to startp array. */
-+char **regendp;		/* Ditto for endp. */
-+char *regparse;		/* Input-scan pointer. */
-+int regnpar;		/* () count. */
-+char regdummy;
-+char *regcode;		/* Code-emit pointer; &regdummy = don't. */
-+long regsize;		/* Code size. */
-+};
++static char *regparse;		/* Input-scan pointer. */
++static int regnpar;		/* () count. */
++static char regdummy;
++static char *regcode;		/* Code-emit pointer; &regdummy = don't. */
++static long regsize;		/* Code size. */
 +
 +/*
 + * Forward declarations for regcomp()'s friends.
@@ -880,16 +886,16 @@
 +#ifndef STATIC
 +#define	STATIC	static
 +#endif
-+STATIC char *reg(struct match_globals *g, int paren,int *flagp);
-+STATIC char *regbranch(struct match_globals *g, int *flagp);
-+STATIC char *regpiece(struct match_globals *g, int *flagp);
-+STATIC char *regatom(struct match_globals *g, int *flagp);
-+STATIC char *regnode(struct match_globals *g, char op);
-+STATIC char *regnext(struct match_globals *g, char *p);
-+STATIC void regc(struct match_globals *g, char b);
-+STATIC void reginsert(struct match_globals *g, char op, char *opnd);
-+STATIC void regtail(struct match_globals *g, char *p, char *val);
-+STATIC void regoptail(struct match_globals *g, char *p, char *val);
++STATIC char *reg(int paren,int *flagp);
++STATIC char *regbranch(int *flagp);
++STATIC char *regpiece(int *flagp);
++STATIC char *regatom(int *flagp);
++STATIC char *regnode(char op);
++STATIC char *regnext(char *p);
++STATIC void regc(char b);
++STATIC void reginsert(char op, char *opnd);
++STATIC void regtail(char *p, char *val);
++STATIC void regoptail(char *p, char *val);
 +
 +
 +__kernel_size_t my_strcspn(const char *s1,const char *s2)
@@ -931,8 +937,6 @@
 +	register char *longest;
 +	register int len;
 +	int flags;
-+	struct match_globals g;
-+	
 +	/* commented out by ethan
 +	   extern char *malloc();
 +	*/
@@ -941,30 +945,30 @@
 +		FAIL("NULL argument");
 +
 +	/* First pass: determine size, legality. */
-+	g.regparse = exp;
-+	g.regnpar = 1;
-+	g.regsize = 0L;
-+	g.regcode = &g.regdummy;
-+	regc(&g, MAGIC);
-+	if (reg(&g, 0, &flags) == NULL)
++	regparse = exp;
++	regnpar = 1;
++	regsize = 0L;
++	regcode = &regdummy;
++	regc(MAGIC);
++	if (reg(0, &flags) == NULL)
 +		return(NULL);
 +
 +	/* Small enough for pointer-storage convention? */
-+	if (g.regsize >= 32767L)		/* Probably could be 65535L. */
++	if (regsize >= 32767L)		/* Probably could be 65535L. */
 +		FAIL("regexp too big");
 +
 +	/* Allocate space. */
-+	*patternsize=sizeof(regexp) + (unsigned)g.regsize;
-+	r = (regexp *)malloc(sizeof(regexp) + (unsigned)g.regsize);
++	*patternsize=sizeof(regexp) + (unsigned)regsize;
++	r = (regexp *)malloc(sizeof(regexp) + (unsigned)regsize);
 +	if (r == NULL)
 +		FAIL("out of space");
 +
 +	/* Second pass: emit code. */
-+	g.regparse = exp;
-+	g.regnpar = 1;
-+	g.regcode = r->program;
-+	regc(&g, MAGIC);
-+	if (reg(&g, 0, &flags) == NULL)
++	regparse = exp;
++	regnpar = 1;
++	regcode = r->program;
++	regc(MAGIC);
++	if (reg(0, &flags) == NULL)
 +		return(NULL);
 +
 +	/* Dig out information for optimizations. */
@@ -973,7 +977,7 @@
 +	r->regmust = NULL;
 +	r->regmlen = 0;
 +	scan = r->program+1;			/* First BRANCH. */
-+	if (OP(regnext(&g, scan)) == END) {		/* Only one top-level choice. */
++	if (OP(regnext(scan)) == END) {		/* Only one top-level choice. */
 +		scan = OPERAND(scan);
 +
 +		/* Starting-point info. */
@@ -993,7 +997,7 @@
 +		if (flags&SPSTART) {
 +			longest = NULL;
 +			len = 0;
-+			for (; scan != NULL; scan = regnext(&g, scan))
++			for (; scan != NULL; scan = regnext(scan))
 +				if (OP(scan) == EXACTLY && strlen(OPERAND(scan)) >= len) {
 +					longest = OPERAND(scan);
 +					len = strlen(OPERAND(scan));
@@ -1016,7 +1020,7 @@
 + * follows makes it hard to avoid.
 + */
 +static char *
-+reg(struct match_globals *g, int paren, int *flagp /* Parenthesized? */ )
++reg(int paren, int *flagp /* Parenthesized? */ )
 +{
 +	register char *ret;
 +	register char *br;
@@ -1028,49 +1032,49 @@
 +
 +	/* Make an OPEN node, if parenthesized. */
 +	if (paren) {
-+		if (g->regnpar >= NSUBEXP)
++		if (regnpar >= NSUBEXP)
 +			FAIL("too many ()");
-+		parno = g->regnpar;
-+		g->regnpar++;
-+		ret = regnode(g, OPEN+parno);
++		parno = regnpar;
++		regnpar++;
++		ret = regnode(OPEN+parno);
 +	} else
 +		ret = NULL;
 +
 +	/* Pick up the branches, linking them together. */
-+	br = regbranch(g, &flags);
++	br = regbranch(&flags);
 +	if (br == NULL)
 +		return(NULL);
 +	if (ret != NULL)
-+		regtail(g, ret, br);	/* OPEN -> first. */
++		regtail(ret, br);	/* OPEN -> first. */
 +	else
 +		ret = br;
 +	if (!(flags&HASWIDTH))
 +		*flagp &= ~HASWIDTH;
 +	*flagp |= flags&SPSTART;
-+	while (*g->regparse == '|') {
-+		g->regparse++;
-+		br = regbranch(g, &flags);
++	while (*regparse == '|') {
++		regparse++;
++		br = regbranch(&flags);
 +		if (br == NULL)
 +			return(NULL);
-+		regtail(g, ret, br);	/* BRANCH -> BRANCH. */
++		regtail(ret, br);	/* BRANCH -> BRANCH. */
 +		if (!(flags&HASWIDTH))
 +			*flagp &= ~HASWIDTH;
 +		*flagp |= flags&SPSTART;
 +	}
 +
 +	/* Make a closing node, and hook it on the end. */
-+	ender = regnode(g, (paren) ? CLOSE+parno : END);	
-+	regtail(g, ret, ender);
++	ender = regnode((paren) ? CLOSE+parno : END);	
++	regtail(ret, ender);
 +
 +	/* Hook the tails of the branches to the closing node. */
-+	for (br = ret; br != NULL; br = regnext(g, br))
-+		regoptail(g, br, ender);
++	for (br = ret; br != NULL; br = regnext(br))
++		regoptail(br, ender);
 +
 +	/* Check for proper termination. */
-+	if (paren && *g->regparse++ != ')') {
++	if (paren && *regparse++ != ')') {
 +		FAIL("unmatched ()");
-+	} else if (!paren && *g->regparse != '\0') {
-+		if (*g->regparse == ')') {
++	} else if (!paren && *regparse != '\0') {
++		if (*regparse == ')') {
 +			FAIL("unmatched ()");
 +		} else
 +			FAIL("junk on end");	/* "Can't happen". */
@@ -1086,7 +1090,7 @@
 + * Implements the concatenation operator.
 + */
 +static char *
-+regbranch(struct match_globals *g, int *flagp)
++regbranch(int *flagp)
 +{
 +	register char *ret;
 +	register char *chain;
@@ -1095,21 +1099,21 @@
 +
 +	*flagp = WORST;		/* Tentatively. */
 +
-+	ret = regnode(g, BRANCH);
++	ret = regnode(BRANCH);
 +	chain = NULL;
-+	while (*g->regparse != '\0' && *g->regparse != '|' && *g->regparse != ')') {
-+		latest = regpiece(g, &flags);
++	while (*regparse != '\0' && *regparse != '|' && *regparse != ')') {
++		latest = regpiece(&flags);
 +		if (latest == NULL)
 +			return(NULL);
 +		*flagp |= flags&HASWIDTH;
 +		if (chain == NULL)	/* First piece. */
 +			*flagp |= flags&SPSTART;
 +		else
-+			regtail(g, chain, latest);
++			regtail(chain, latest);
 +		chain = latest;
 +	}
 +	if (chain == NULL)	/* Loop ran zero times. */
-+		(void) regnode(g, NOTHING);
++		(void) regnode(NOTHING);
 +
 +	return(ret);
 +}
@@ -1124,18 +1128,18 @@
 + * endmarker role is not redundant.
 + */
 +static char *
-+regpiece(struct match_globals *g, int *flagp)
++regpiece(int *flagp)
 +{
 +	register char *ret;
 +	register char op;
 +	register char *next;
 +	int flags;
 +
-+	ret = regatom(g, &flags);
++	ret = regatom(&flags);
 +	if (ret == NULL)
 +		return(NULL);
 +
-+	op = *g->regparse;
++	op = *regparse;
 +	if (!ISMULT(op)) {
 +		*flagp = flags;
 +		return(ret);
@@ -1146,33 +1150,33 @@
 +	*flagp = (op != '+') ? (WORST|SPSTART) : (WORST|HASWIDTH);
 +
 +	if (op == '*' && (flags&SIMPLE))
-+		reginsert(g, STAR, ret);
++		reginsert(STAR, ret);
 +	else if (op == '*') {
 +		/* Emit x* as (x&|), where & means "self". */
-+		reginsert(g, BRANCH, ret);			/* Either x */
-+		regoptail(g, ret, regnode(g, BACK));		/* and loop */
-+		regoptail(g, ret, ret);			/* back */
-+		regtail(g, ret, regnode(g, BRANCH));		/* or */
-+		regtail(g, ret, regnode(g, NOTHING));		/* null. */
++		reginsert(BRANCH, ret);			/* Either x */
++		regoptail(ret, regnode(BACK));		/* and loop */
++		regoptail(ret, ret);			/* back */
++		regtail(ret, regnode(BRANCH));		/* or */
++		regtail(ret, regnode(NOTHING));		/* null. */
 +	} else if (op == '+' && (flags&SIMPLE))
-+		reginsert(g, PLUS, ret);
++		reginsert(PLUS, ret);
 +	else if (op == '+') {
 +		/* Emit x+ as x(&|), where & means "self". */
-+		next = regnode(g, BRANCH);			/* Either */
-+		regtail(g, ret, next);
-+		regtail(g, regnode(g, BACK), ret);		/* loop back */
-+		regtail(g, next, regnode(g, BRANCH));		/* or */
-+		regtail(g, ret, regnode(g, NOTHING));		/* null. */
++		next = regnode(BRANCH);			/* Either */
++		regtail(ret, next);
++		regtail(regnode(BACK), ret);		/* loop back */
++		regtail(next, regnode(BRANCH));		/* or */
++		regtail(ret, regnode(NOTHING));		/* null. */
 +	} else if (op == '?') {
 +		/* Emit x? as (x|) */
-+		reginsert(g, BRANCH, ret);			/* Either x */
-+		regtail(g, ret, regnode(g, BRANCH));		/* or */
-+		next = regnode(g, NOTHING);		/* null. */
-+		regtail(g, ret, next);
-+		regoptail(g, ret, next);
++		reginsert(BRANCH, ret);			/* Either x */
++		regtail(ret, regnode(BRANCH));		/* or */
++		next = regnode(NOTHING);		/* null. */
++		regtail(ret, next);
++		regoptail(ret, next);
 +	}
-+	g->regparse++;
-+	if (ISMULT(*g->regparse))
++	regparse++;
++	if (ISMULT(*regparse))
 +		FAIL("nested *?+");
 +
 +	return(ret);
@@ -1187,61 +1191,61 @@
 + * separate node; the code is simpler that way and it's not worth fixing.
 + */
 +static char *
-+regatom(struct match_globals *g, int *flagp)
++regatom(int *flagp)
 +{
 +	register char *ret;
 +	int flags;
 +
 +	*flagp = WORST;		/* Tentatively. */
 +
-+	switch (*g->regparse++) {
++	switch (*regparse++) {
 +	case '^':
-+		ret = regnode(g, BOL);
++		ret = regnode(BOL);
 +		break;
 +	case '$':
-+		ret = regnode(g, EOL);
++		ret = regnode(EOL);
 +		break;
 +	case '.':
-+		ret = regnode(g, ANY);
++		ret = regnode(ANY);
 +		*flagp |= HASWIDTH|SIMPLE;
 +		break;
 +	case '[': {
 +			register int class;
 +			register int classend;
 +
-+			if (*g->regparse == '^') {	/* Complement of range. */
-+				ret = regnode(g, ANYBUT);
-+				g->regparse++;
++			if (*regparse == '^') {	/* Complement of range. */
++				ret = regnode(ANYBUT);
++				regparse++;
 +			} else
-+				ret = regnode(g, ANYOF);
-+			if (*g->regparse == ']' || *g->regparse == '-')
-+				regc(g, *g->regparse++);
-+			while (*g->regparse != '\0' && *g->regparse != ']') {
-+				if (*g->regparse == '-') {
-+					g->regparse++;
-+					if (*g->regparse == ']' || *g->regparse == '\0')
-+						regc(g, '-');
++				ret = regnode(ANYOF);
++			if (*regparse == ']' || *regparse == '-')
++				regc(*regparse++);
++			while (*regparse != '\0' && *regparse != ']') {
++				if (*regparse == '-') {
++					regparse++;
++					if (*regparse == ']' || *regparse == '\0')
++						regc('-');
 +					else {
-+						class = UCHARAT(g->regparse-2)+1;
-+						classend = UCHARAT(g->regparse);
++						class = UCHARAT(regparse-2)+1;
++						classend = UCHARAT(regparse);
 +						if (class > classend+1)
 +							FAIL("invalid [] range");
 +						for (; class <= classend; class++)
-+							regc(g, class);
-+						g->regparse++;
++							regc(class);
++						regparse++;
 +					}
 +				} else
-+					regc(g, *g->regparse++);
++					regc(*regparse++);
 +			}
-+			regc(g, '\0');
-+			if (*g->regparse != ']')
++			regc('\0');
++			if (*regparse != ']')
 +				FAIL("unmatched []");
-+			g->regparse++;
++			regparse++;
 +			*flagp |= HASWIDTH|SIMPLE;
 +		}
 +		break;
 +	case '(':
-+		ret = reg(g, 1, &flags);
++		ret = reg(1, &flags);
 +		if (ret == NULL)
 +			return(NULL);
 +		*flagp |= flags&(HASWIDTH|SPSTART);
@@ -1257,33 +1261,33 @@
 +		FAIL("?+* follows nothing");
 +		break;
 +	case '\\':
-+		if (*g->regparse == '\0')
++		if (*regparse == '\0')
 +			FAIL("trailing \\");
-+		ret = regnode(g, EXACTLY);
-+		regc(g, *g->regparse++);
-+		regc(g, '\0');
++		ret = regnode(EXACTLY);
++		regc(*regparse++);
++		regc('\0');
 +		*flagp |= HASWIDTH|SIMPLE;
 +		break;
 +	default: {
 +			register int len;
 +			register char ender;
 +
-+			g->regparse--;
-+			len = my_strcspn((const char *)g->regparse, (const char *)META);
++			regparse--;
++			len = my_strcspn((const char *)regparse, (const char *)META);
 +			if (len <= 0)
 +				FAIL("internal disaster");
-+			ender = *(g->regparse+len);
++			ender = *(regparse+len);
 +			if (len > 1 && ISMULT(ender))
 +				len--;		/* Back off clear of ?+* operand. */
 +			*flagp |= HASWIDTH;
 +			if (len == 1)
 +				*flagp |= SIMPLE;
-+			ret = regnode(g, EXACTLY);
++			ret = regnode(EXACTLY);
 +			while (len > 0) {
-+				regc(g, *g->regparse++);
++				regc(*regparse++);
 +				len--;
 +			}
-+			regc(g, '\0');
++			regc('\0');
 +		}
 +		break;
 +	}
@@ -1295,14 +1299,14 @@
 + - regnode - emit a node
 + */
 +static char *			/* Location. */
-+regnode(struct match_globals *g, char op)
++regnode(char op)
 +{
 +	register char *ret;
 +	register char *ptr;
 +
-+	ret = g->regcode;
-+	if (ret == &g->regdummy) {
-+		g->regsize += 3;
++	ret = regcode;
++	if (ret == &regdummy) {
++		regsize += 3;
 +		return(ret);
 +	}
 +
@@ -1310,7 +1314,7 @@
 +	*ptr++ = op;
 +	*ptr++ = '\0';		/* Null "next" pointer. */
 +	*ptr++ = '\0';
-+	g->regcode = ptr;
++	regcode = ptr;
 +
 +	return(ret);
 +}
@@ -1319,12 +1323,12 @@
 + - regc - emit (if appropriate) a byte of code
 + */
 +static void
-+regc(struct match_globals *g, char b)
++regc(char b)
 +{
-+	if (g->regcode != &g->regdummy)
-+		*g->regcode++ = b;
++	if (regcode != &regdummy)
++		*regcode++ = b;
 +	else
-+		g->regsize++;
++		regsize++;
 +}
 +
 +/*
@@ -1333,20 +1337,20 @@
 + * Means relocating the operand.
 + */
 +static void
-+reginsert(struct match_globals *g, char op, char* opnd)
++reginsert(char op, char* opnd)
 +{
 +	register char *src;
 +	register char *dst;
 +	register char *place;
 +
-+	if (g->regcode == &g->regdummy) {
-+		g->regsize += 3;
++	if (regcode == &regdummy) {
++		regsize += 3;
 +		return;
 +	}
 +
-+	src = g->regcode;
-+	g->regcode += 3;
-+	dst = g->regcode;
++	src = regcode;
++	regcode += 3;
++	dst = regcode;
 +	while (src > opnd)
 +		*--dst = *--src;
 +
@@ -1360,19 +1364,19 @@
 + - regtail - set the next-pointer at the end of a node chain
 + */
 +static void
-+regtail(struct match_globals *g, char *p, char *val)
++regtail(char *p, char *val)
 +{
 +	register char *scan;
 +	register char *temp;
 +	register int offset;
 +
-+	if (p == &g->regdummy)
++	if (p == &regdummy)
 +		return;
 +
 +	/* Find last node. */
 +	scan = p;
 +	for (;;) {
-+		temp = regnext(g, scan);
++		temp = regnext(scan);
 +		if (temp == NULL)
 +			break;
 +		scan = temp;
@@ -1390,25 +1394,32 @@
 + - regoptail - regtail on operand of first argument; nop if operandless
 + */
 +static void
-+regoptail(struct match_globals *g, char *p, char *val)
++regoptail(char *p, char *val)
 +{
 +	/* "Operandless" and "op != BRANCH" are synonymous in practice. */
-+	if (p == NULL || p == &g->regdummy || OP(p) != BRANCH)
++	if (p == NULL || p == &regdummy || OP(p) != BRANCH)
 +		return;
-+	regtail(g, OPERAND(p), val);
++	regtail(OPERAND(p), val);
 +}
 +
 +/*
 + * regexec and friends
 + */
 +
++/*
++ * Global work variables for regexec().
++ */
++static char *reginput;		/* String-input pointer. */
++static char *regbol;		/* Beginning of input, for ^ check. */
++static char **regstartp;	/* Pointer to startp array. */
++static char **regendp;		/* Ditto for endp. */
 +
 +/*
 + * Forwards.
 + */
-+STATIC int regtry(struct match_globals *g, regexp *prog, char *string);
-+STATIC int regmatch(struct match_globals *g, char *prog);
-+STATIC int regrepeat(struct match_globals *g, char *p);
++STATIC int regtry(regexp *prog, char *string);
++STATIC int regmatch(char *prog);
++STATIC int regrepeat(char *p);
 +
 +#ifdef DEBUG
 +int regnarrate = 0;
@@ -1423,7 +1434,6 @@
 +regexec(regexp *prog, char *string)
 +{
 +	register char *s;
-+	struct match_globals g;
 +
 +	/* Be paranoid... */
 +	if (prog == NULL || string == NULL) {
@@ -1450,25 +1460,25 @@
 +	}
 +
 +	/* Mark beginning of line for ^ . */
-+	g.regbol = string;
++	regbol = string;
 +
 +	/* Simplest case:  anchored match need be tried only once. */
 +	if (prog->reganch)
-+		return(regtry(&g, prog, string));
++		return(regtry(prog, string));
 +
 +	/* Messy cases:  unanchored match. */
 +	s = string;
 +	if (prog->regstart != '\0')
 +		/* We know what char it must start with. */
 +		while ((s = strchr(s, prog->regstart)) != NULL) {
-+			if (regtry(&g, prog, s))
++			if (regtry(prog, s))
 +				return(1);
 +			s++;
 +		}
 +	else
 +		/* We don't -- general case. */
 +		do {
-+			if (regtry(&g, prog, s))
++			if (regtry(prog, s))
 +				return(1);
 +		} while (*s++ != '\0');
 +
@@ -1480,15 +1490,15 @@
 + - regtry - try match at specific point
 + */
 +static int			/* 0 failure, 1 success */
-+regtry(struct match_globals *g, regexp *prog, char *string)
++regtry(regexp *prog, char *string)
 +{
 +	register int i;
 +	register char **sp;
 +	register char **ep;
 +
-+	g->reginput = string;
-+	g->regstartp = prog->startp;
-+	g->regendp = prog->endp;
++	reginput = string;
++	regstartp = prog->startp;
++	regendp = prog->endp;
 +
 +	sp = prog->startp;
 +	ep = prog->endp;
@@ -1496,9 +1506,9 @@
 +		*sp++ = NULL;
 +		*ep++ = NULL;
 +	}
-+	if (regmatch(g, prog->program + 1)) {
++	if (regmatch(prog->program + 1)) {
 +		prog->startp[0] = string;
-+		prog->endp[0] = g->reginput;
++		prog->endp[0] = reginput;
 +		return(1);
 +	} else
 +		return(0);
@@ -1515,7 +1525,7 @@
 + * by recursion.
 + */
 +static int			/* 0 failure, 1 success */
-+regmatch(struct match_globals *g, char *prog)
++regmatch(char *prog)
 +{
 +	register char *scan = prog; /* Current node. */
 +	char *next;		    /* Next node. */
@@ -1529,21 +1539,21 @@
 +		if (regnarrate)
 +			fprintf(stderr, "%s...\n", regprop(scan));
 +#endif
-+		next = regnext(g, scan);
++		next = regnext(scan);
 +
 +		switch (OP(scan)) {
 +		case BOL:
-+			if (g->reginput != g->regbol)
++			if (reginput != regbol)
 +				return(0);
 +			break;
 +		case EOL:
-+			if (*g->reginput != '\0')
++			if (*reginput != '\0')
 +				return(0);
 +			break;
 +		case ANY:
-+			if (*g->reginput == '\0')
++			if (*reginput == '\0')
 +				return(0);
-+			g->reginput++;
++			reginput++;
 +			break;
 +		case EXACTLY: {
 +				register int len;
@@ -1551,23 +1561,23 @@
 +
 +				opnd = OPERAND(scan);
 +				/* Inline the first character, for speed. */
-+				if (*opnd != *g->reginput)
++				if (*opnd != *reginput)
 +					return(0);
 +				len = strlen(opnd);
-+				if (len > 1 && strncmp(opnd, g->reginput, len) != 0)
++				if (len > 1 && strncmp(opnd, reginput, len) != 0)
 +					return(0);
-+				g->reginput += len;
++				reginput += len;
 +			}
 +			break;
 +		case ANYOF:
-+			if (*g->reginput == '\0' || strchr(OPERAND(scan), *g->reginput) == NULL)
++			if (*reginput == '\0' || strchr(OPERAND(scan), *reginput) == NULL)
 +				return(0);
-+			g->reginput++;
++			reginput++;
 +			break;
 +		case ANYBUT:
-+			if (*g->reginput == '\0' || strchr(OPERAND(scan), *g->reginput) != NULL)
++			if (*reginput == '\0' || strchr(OPERAND(scan), *reginput) != NULL)
 +				return(0);
-+			g->reginput++;
++			reginput++;
 +			break;
 +		case NOTHING:
 +		case BACK:
@@ -1585,16 +1595,16 @@
 +				register char *save;
 +
 +				no = OP(scan) - OPEN;
-+				save = g->reginput;
++				save = reginput;
 +
-+				if (regmatch(g, next)) {
++				if (regmatch(next)) {
 +					/*
 +					 * Don't set startp if some later
 +					 * invocation of the same parentheses
 +					 * already has.
 +					 */
-+					if (g->regstartp[no] == NULL)
-+						g->regstartp[no] = save;
++					if (regstartp[no] == NULL)
++						regstartp[no] = save;
 +					return(1);
 +				} else
 +					return(0);
@@ -1614,16 +1624,16 @@
 +				register char *save;
 +
 +				no = OP(scan) - CLOSE;
-+				save = g->reginput;
++				save = reginput;
 +
-+				if (regmatch(g, next)) {
++				if (regmatch(next)) {
 +					/*
 +					 * Don't set endp if some later
 +					 * invocation of the same parentheses
 +					 * already has.
 +					 */
-+					if (g->regendp[no] == NULL)
-+						g->regendp[no] = save;
++					if (regendp[no] == NULL)
++						regendp[no] = save;
 +					return(1);
 +				} else
 +					return(0);
@@ -1636,11 +1646,11 @@
 +					next = OPERAND(scan);	/* Avoid recursion. */
 +				else {
 +					do {
-+						save = g->reginput;
-+						if (regmatch(g, OPERAND(scan)))
++						save = reginput;
++						if (regmatch(OPERAND(scan)))
 +							return(1);
-+						g->reginput = save;
-+						scan = regnext(g, scan);
++						reginput = save;
++						scan = regnext(scan);
 +					} while (scan != NULL && OP(scan) == BRANCH);
 +					return(0);
 +					/* NOTREACHED */
@@ -1662,16 +1672,16 @@
 +				if (OP(next) == EXACTLY)
 +					nextch = *OPERAND(next);
 +				min = (OP(scan) == STAR) ? 0 : 1;
-+				save = g->reginput;
-+				no = regrepeat(g, OPERAND(scan));
++				save = reginput;
++				no = regrepeat(OPERAND(scan));
 +				while (no >= min) {
 +					/* If it could work, try it. */
-+					if (nextch == '\0' || *g->reginput == nextch)
-+						if (regmatch(g, next))
++					if (nextch == '\0' || *reginput == nextch)
++						if (regmatch(next))
 +							return(1);
 +					/* Couldn't or didn't -- back up. */
 +					no--;
-+					g->reginput = save + no;
++					reginput = save + no;
 +				}
 +				return(0);
 +			}
@@ -1700,13 +1710,13 @@
 + - regrepeat - repeatedly match something simple, report how many
 + */
 +static int
-+regrepeat(struct match_globals *g, char *p)
++regrepeat(char *p)
 +{
 +	register int count = 0;
 +	register char *scan;
 +	register char *opnd;
 +
-+	scan = g->reginput;
++	scan = reginput;
 +	opnd = OPERAND(p);
 +	switch (OP(p)) {
 +	case ANY:
@@ -1736,7 +1746,7 @@
 +		count = 0;	/* Best compromise. */
 +		break;
 +	}
-+	g->reginput = scan;
++	reginput = scan;
 +
 +	return(count);
 +}
@@ -1744,12 +1754,12 @@
 +/*
 + - regnext - dig the "next" pointer out of a node
 + */
-+static char*
-+regnext(struct match_globals *g, char *p)
++static char* 
++regnext(char *p)
 +{
 +	register int offset;
 +
-+	if (p == &g->regdummy)
++	if (p == &regdummy)
 +		return(NULL);
 +
 +	offset = NEXT(p);
@@ -1785,7 +1795,7 @@
 +		next = regnext(s);
 +		if (next == NULL)		/* Next ptr. */
 +			printf("(0)");
-+		else
++		else 
 +			printf("(%d)", (s-r->program)+(next-s));
 +		s += 3;
 +		if (op == ANYOF || op == ANYBUT || op == EXACTLY) {
@@ -1893,9 +1903,10 @@
 +#endif
 +
 +
---- linux-2.6.17.6-stock/net/ipv4/netfilter/regexp/regexp.h	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.17.6-layer7/net/ipv4/netfilter/regexp/regexp.h	2006-08-03 21:33:00.000000000 -0500
-@@ -0,0 +1,41 @@
+diff -Nurp linux-2.4.31/net/ipv4/netfilter/regexp/regexp.h linux-2.4.31-layer7/net/ipv4/netfilter/regexp/regexp.h
+--- linux-2.4.31/net/ipv4/netfilter/regexp/regexp.h	1969-12-31 18:00:00.000000000 -0600
++++ linux-2.4.31-layer7/net/ipv4/netfilter/regexp/regexp.h	2005-09-01 00:17:13.000000000 -0500
+@@ -0,0 +1,40 @@
 +/*
 + * Definitions etc. for regexp(3) routines.
 + *
@@ -1906,9 +1917,8 @@
 +#ifndef REGEXP_H
 +#define REGEXP_H
 +
-+
-+/*
-+http://www.opensource.apple.com/darwinsource/10.3/expect-1/expect/expect.h ,
++/* 
++http://www.opensource.apple.com/darwinsource/10.3/expect-1/expect/expect.h , 
 +which contains a version of this library, says:
 +
 + *
@@ -1937,16 +1947,18 @@
 +void regerror(char *s);
 +
 +#endif
---- linux-2.6.17.6-stock/net/ipv4/netfilter/regexp/regmagic.h	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.17.6-layer7/net/ipv4/netfilter/regexp/regmagic.h	2006-07-15 17:55:25.000000000 -0500
+diff -Nurp linux-2.4.31/net/ipv4/netfilter/regexp/regmagic.h linux-2.4.31-layer7/net/ipv4/netfilter/regexp/regmagic.h
+--- linux-2.4.31/net/ipv4/netfilter/regexp/regmagic.h	1969-12-31 18:00:00.000000000 -0600
++++ linux-2.4.31-layer7/net/ipv4/netfilter/regexp/regmagic.h	2005-09-01 00:17:13.000000000 -0500
 @@ -0,0 +1,5 @@
 +/*
 + * The first byte of the regexp internal "program" is actually this magic
 + * number; the start node begins in the second byte.
 + */
 +#define	MAGIC	0234
---- linux-2.6.17.6-stock/net/ipv4/netfilter/regexp/regsub.c	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.17.6-layer7/net/ipv4/netfilter/regexp/regsub.c	2006-07-15 17:55:25.000000000 -0500
+diff -Nurp linux-2.4.31/net/ipv4/netfilter/regexp/regsub.c linux-2.4.31-layer7/net/ipv4/netfilter/regexp/regsub.c
+--- linux-2.4.31/net/ipv4/netfilter/regexp/regsub.c	1969-12-31 18:00:00.000000000 -0600
++++ linux-2.4.31-layer7/net/ipv4/netfilter/regexp/regsub.c	2005-09-01 00:17:13.000000000 -0500
 @@ -0,0 +1,95 @@
 +/*
 + * regsub

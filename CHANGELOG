@@ -1,4 +1,9 @@
-v2.4
+v2.4.1
+
+- I had accidentally overwritten the 2.4 patch with a newer version of the
+2.6 patch.  Oops!  It is now restored.
+
+v2.4 - Changes to 2.6 version only
 
 - Changed to using Deti Fliegl's match_globals in the regexp code
 for SMP safeness.  (The code as a whole is still probably not SMP safe.)
