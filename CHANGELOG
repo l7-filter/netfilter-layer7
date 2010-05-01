@@ -1,3 +1,8 @@
+v2.1 - iptables now issues warnings when regular expressions contain hex
+codes that are regexp control characters or null.  No change to kernel
+patches.  (Noted that kernel patch is now tested with 2.6.15.)
+
+
 v2.0 - No big changes.
 
 - iptables used to ask for --pattern if it didn't get --l7proto.  Fixed.
