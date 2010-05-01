@@ -1,0 +1,12 @@
+
+/* The following functions are here in case we get ported into an environment
+(ebtables?) where skb->nh.iph->protocol isn't set. They assume that skb->data
+points at the beginning of the IP datagram, which is true for iptables (but in
+QoS it points to the beginning of the Ethernet frame). */
+#if 0
+#define IP_PROTO_OFFSET 9
+static int is_tcp_over_ipv4 (const struct sk_buff *skb){return(skb->data[IP_PROTO_OFFSET]==IPPROTO_TCP );}
+static int is_udp_over_ipv4 (const struct sk_buff *skb){return(skb->data[IP_PROTO_OFFSET]==IPPROTO_UDP );}
+static int is_icmp_over_ipv4(const struct sk_buff *skb){return(skb->data[IP_PROTO_OFFSET]==IPPROTO_ICMP);}
+#endif
+

@@ -1,3 +1,15 @@
+v1.0.1 - Bug fix release:
+
+- Fixed memory leak in kernel.  
+
+- Fixed iptables crash on AMD64. 
+
+- Fixed kernel compilation problem on AMD64.
+
+This release does not yet work with Linux 2.6.11.X.  Wait for v1.1 if
+you need that.  (Should be soon.)
+
+
 v1.0 - No changes to 2.4 version or iptables.  Shuffled around a bit of code
 in the 2.6 version so that it could patch cleanly to both 2.6.9 and 
 2.6.10.  Included the previous version of 2.6 patch so that people using 
@@ -18,27 +30,35 @@ marked "unknown".
 v0.9.1 - Changes to ipt_helper.c that aren't part of l7-filter had crept
 into the 2.6 patch of v0.9.0.  They are now removed.  No other changes.
 
+
 v0.9.0 - 2.4 version now should compile correctly if l7-filter is
 built-in. Fixed a significant bug which caused some patterns not to work
 (tolower was munging 'upper ascii' characters).  No change to iptables.
 
+
 v0.8.2 - Iptables now uses modular man pages (as of v1.2.10).  The iptables
 patch now conforms to this new format.  No change to kernel.
 
+
 v0.8.1 - Made code slightly more paranoid about running out of memory.  No 
 change to iptables.
+
 
 v0.8 - Small improvements to locking code.  All kmallocs should be
 checked now. Converted the regexp code into this century's C syntax. 
 Added a patch for Linux 2.4.  No change to iptables.
 
+
 v0.7 - Improvements to locking code.  No change to iptables.
+
 
 v0.6.1 - Fixed places where iptables used --l7-proto instead of --l7proto.
 No change to kernel.
 
+
 v0.6 - Significant kernel code cleanup.  Attempted to make code SMP safe with
 spin_lock() and GFP_ATOMIC.  No change to iptables code.
+
 
 v0.5 - Initial release in this format.
 
