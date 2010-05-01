@@ -1,3 +1,7 @@
+v2.10 - Added a missing check to the pattern parsing code in iptables.
+Updated kernel patch for 2.6.20+, using paranoid locking.  No changes to 2.4.
+
+
 v2.9 - Changes to 2.6 version: Implemented "unset" which matches 
 connections which are still being tested with no match.  No changes to 
 2.4 version or iptables.
