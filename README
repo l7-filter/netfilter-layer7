@@ -7,7 +7,7 @@ In this directory you will find:
 
 ***** kernel patches *****
 
-- a patch for Linux 2.6 called "kernel-2.6.13-layer7-1.4.patch"
+- a patch for Linux 2.6 called "kernel-2.6.13-layer7-2.0.patch"
 
 This patch is against 2.6.13.  It won't work with earlier kernels.  It
 probably works with future ones (but this isn't tested, obviously). For
@@ -19,9 +19,9 @@ find files named like this:
 Use the one that matches your kernel version.  If the l7-filter version
 is not the latest, then it may be missing some newer features.  See CHANGELOG.
 
-- a patch for Linux 2.4 called "kernel-2.4-layer7-1.4.patch"
+- a patch for Linux 2.4 called "kernel-2.4-layer7-2.0.patch"
 
-This patch is against 2.4.30.  As far as we know, it works with all 2.4
+This patch is against 2.4.31.  As far as we know, it works with all 2.4
 versions, but we have not tested them all.  It is highly likely that it
 will work with all future 2.4 versions.
 
