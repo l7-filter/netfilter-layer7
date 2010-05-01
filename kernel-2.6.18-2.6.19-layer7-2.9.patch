@@ -1,4 +1,4 @@
---- linux-2.6.19.1/include/linux/netfilter_ipv4/ip_conntrack.h	2006-12-11 13:32:53.000000000 -0600
+--- linux-2.6.19.1-stock/include/linux/netfilter_ipv4/ip_conntrack.h	2006-12-11 13:32:53.000000000 -0600
 +++ linux-2.6.19.1-layer7/include/linux/netfilter_ipv4/ip_conntrack.h	2006-12-13 00:13:08.000000000 -0600
 @@ -127,6 +127,15 @@ struct ip_conntrack
  	/* Traversed often, so hopefully in different cacheline to top */
@@ -16,7 +16,7 @@
  };
  
  struct ip_conntrack_expect
---- linux-2.6.19.1/include/linux/netfilter_ipv4/ipt_layer7.h	1969-12-31 18:00:00.000000000 -0600
+--- linux-2.6.19.1-stock/include/linux/netfilter_ipv4/ipt_layer7.h	1969-12-31 18:00:00.000000000 -0600
 +++ linux-2.6.19.1-layer7/include/linux/netfilter_ipv4/ipt_layer7.h	2006-12-13 00:13:08.000000000 -0600
 @@ -0,0 +1,26 @@
 +/*
@@ -45,7 +45,7 @@
 +};
 +
 +#endif /* _IPT_LAYER7_H */
---- linux-2.6.19.1/net/ipv4/netfilter/Kconfig	2006-12-11 13:32:53.000000000 -0600
+--- linux-2.6.19.1-stock/net/ipv4/netfilter/Kconfig	2006-12-11 13:32:53.000000000 -0600
 +++ linux-2.6.19.1-layer7/net/ipv4/netfilter/Kconfig	2006-12-13 00:13:08.000000000 -0600
 @@ -248,6 +248,24 @@ config IP_NF_MATCH_IPRANGE
  
@@ -72,7 +72,7 @@
  config IP_NF_MATCH_TOS
  	tristate "TOS match support"
  	depends on IP_NF_IPTABLES
---- linux-2.6.19.1/net/ipv4/netfilter/Makefile	2006-12-11 13:32:53.000000000 -0600
+--- linux-2.6.19.1-stock/net/ipv4/netfilter/Makefile	2006-12-11 13:32:53.000000000 -0600
 +++ linux-2.6.19.1-layer7/net/ipv4/netfilter/Makefile	2006-12-13 00:13:08.000000000 -0600
 @@ -63,6 +63,8 @@ obj-$(CONFIG_IP_NF_MATCH_AH) += ipt_ah.o
  obj-$(CONFIG_IP_NF_MATCH_TTL) += ipt_ttl.o
@@ -83,7 +83,7 @@
  # targets
  obj-$(CONFIG_IP_NF_TARGET_REJECT) += ipt_REJECT.o
  obj-$(CONFIG_IP_NF_TARGET_TOS) += ipt_TOS.o
---- linux-2.6.19.1/net/ipv4/netfilter/ip_conntrack_core.c	2006-12-11 13:32:53.000000000 -0600
+--- linux-2.6.19.1-stock/net/ipv4/netfilter/ip_conntrack_core.c	2006-12-11 13:32:53.000000000 -0600
 +++ linux-2.6.19.1-layer7/net/ipv4/netfilter/ip_conntrack_core.c	2006-12-13 00:13:08.000000000 -0600
 @@ -337,6 +337,13 @@ destroy_conntrack(struct nf_conntrack *n
  	 * too. */
@@ -99,7 +99,7 @@
  	/* We overload first tuple to link into unconfirmed list. */
  	if (!is_confirmed(ct)) {
  		BUG_ON(list_empty(&ct->tuplehash[IP_CT_DIR_ORIGINAL].list));
---- linux-2.6.19.1/net/ipv4/netfilter/ip_conntrack_standalone.c	2006-12-11 13:32:53.000000000 -0600
+--- linux-2.6.19.1-stock/net/ipv4/netfilter/ip_conntrack_standalone.c	2006-12-11 13:32:53.000000000 -0600
 +++ linux-2.6.19.1-layer7/net/ipv4/netfilter/ip_conntrack_standalone.c	2006-12-13 00:13:08.000000000 -0600
 @@ -192,6 +192,12 @@ static int ct_seq_show(struct seq_file *
  		return -ENOSPC;
@@ -114,9 +114,9 @@
  	if (seq_printf(s, "use=%u\n", atomic_read(&conntrack->ct_general.use)))
  		return -ENOSPC;
  
---- linux-2.6.19.1/net/ipv4/netfilter/ipt_layer7.c	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.19.1-layer7/net/ipv4/netfilter/ipt_layer7.c	2006-12-18 22:18:37.000000000 -0600
-@@ -0,0 +1,573 @@
+--- linux-2.6.19.1-stock/net/ipv4/netfilter/ipt_layer7.c	1969-12-31 18:00:00.000000000 -0600
++++ linux-2.6.19.1-layer7/net/ipv4/netfilter/ipt_layer7.c	2007-01-03 20:37:36.000000000 -0600
+@@ -0,0 +1,578 @@
 +/*
 +  Kernel module to match application layer (OSI layer 7) data in connections.
 +
@@ -472,7 +472,6 @@
 +	connection. This makes /proc/net/ip_conntrack more satisfying. */
 +	if(!(conntrack = ip_conntrack_get((struct sk_buff *)skb, &ctinfo)) ||
 +	   !(master_conntrack = ip_conntrack_get((struct sk_buff *)skb, &master_ctinfo))) {
-+		//DPRINTK("layer7: packet is not from a known connection, giving up.\n");
 +		return info->invert;
 +	}
 +
@@ -486,11 +485,10 @@
 +
 +		pattern_result = match_no_append(conntrack, master_conntrack, ctinfo, master_ctinfo, info);
 +
-+		/* skb->cb[0] == seen. Avoid doing things twice if there are two l7
-+		rules. I'm not sure that using cb for this purpose is correct, although
++		/* skb->cb[0] == seen. Don't do things twice if there are multiple l7
++		rules. I'm not sure that using cb for this purpose is correct, even though
 +		it says "put your private variables there". But it doesn't look like it
-+		is being used for anything else in the skbs that make it here. How can
-+		I write to cb without making the compiler angry? */
++		is being used for anything else in the skbs that make it here. */
 +		skb->cb[0] = 1; /* marking it seen here is probably irrelevant, but consistant */
 +
 +		return (pattern_result ^ info->invert);
@@ -551,6 +549,11 @@
 +	read_lock(&ct_lock);
 +	if(!strcmp(info->protocol, "unknown")) {
 +		pattern_result = 0;
++	/* If looking for "unset", then always match. "Unset" means that we
++	haven't yet classified the connection. */
++	} else if(!strcmp(info->protocol, "unset")) {
++		pattern_result = 2;
++		DPRINTK("layer7: matched unset: not yet classified (%d/%d packets)\n", TOTAL_PACKETS, num_packets);
 +	/* If the regexp failed to compile, don't bother running it */
 +	} else if(comppattern && regexec(comppattern, master_conntrack->layer7.app_data)) {
 +		DPRINTK("layer7: matched %s\n", info->protocol);
@@ -558,7 +561,7 @@
 +	} else pattern_result = 0;
 +	read_unlock(&ct_lock);
 +
-+	if(pattern_result) {
++	if(pattern_result == 1) {
 +		write_lock(&ct_lock);
 +		master_conntrack->layer7.app_proto = kmalloc(strlen(info->protocol)+1, GFP_ATOMIC);
 +		if(!master_conntrack->layer7.app_proto){
@@ -569,6 +572,8 @@
 +		}
 +		strcpy(master_conntrack->layer7.app_proto, info->protocol);
 +		write_unlock(&ct_lock);
++	} else if(pattern_result > 1) { /* cleanup from "unset" */
++		pattern_result = 1;
 +	}
 +
 +	/* mark the packet seen */
@@ -690,7 +695,7 @@
 +
 +module_init(ipt_layer7_init);
 +module_exit(ipt_layer7_fini);
---- linux-2.6.19.1/net/ipv4/netfilter/regexp/regexp.c	1969-12-31 18:00:00.000000000 -0600
+--- linux-2.6.19.1-stock/net/ipv4/netfilter/regexp/regexp.c	1969-12-31 18:00:00.000000000 -0600
 +++ linux-2.6.19.1-layer7/net/ipv4/netfilter/regexp/regexp.c	2006-12-13 00:13:08.000000000 -0600
 @@ -0,0 +1,1197 @@
 +/*
@@ -1890,7 +1895,7 @@
 +#endif
 +
 +
---- linux-2.6.19.1/net/ipv4/netfilter/regexp/regexp.h	1969-12-31 18:00:00.000000000 -0600
+--- linux-2.6.19.1-stock/net/ipv4/netfilter/regexp/regexp.h	1969-12-31 18:00:00.000000000 -0600
 +++ linux-2.6.19.1-layer7/net/ipv4/netfilter/regexp/regexp.h	2006-12-13 00:13:08.000000000 -0600
 @@ -0,0 +1,41 @@
 +/*
@@ -1934,7 +1939,7 @@
 +void regerror(char *s);
 +
 +#endif
---- linux-2.6.19.1/net/ipv4/netfilter/regexp/regmagic.h	1969-12-31 18:00:00.000000000 -0600
+--- linux-2.6.19.1-stock/net/ipv4/netfilter/regexp/regmagic.h	1969-12-31 18:00:00.000000000 -0600
 +++ linux-2.6.19.1-layer7/net/ipv4/netfilter/regexp/regmagic.h	2006-12-13 00:13:08.000000000 -0600
 @@ -0,0 +1,5 @@
 +/*
@@ -1942,7 +1947,7 @@
 + * number; the start node begins in the second byte.
 + */
 +#define	MAGIC	0234
---- linux-2.6.19.1/net/ipv4/netfilter/regexp/regsub.c	1969-12-31 18:00:00.000000000 -0600
+--- linux-2.6.19.1-stock/net/ipv4/netfilter/regexp/regsub.c	1969-12-31 18:00:00.000000000 -0600
 +++ linux-2.6.19.1-layer7/net/ipv4/netfilter/regexp/regsub.c	2006-12-13 00:13:08.000000000 -0600
 @@ -0,0 +1,95 @@
 +/*
