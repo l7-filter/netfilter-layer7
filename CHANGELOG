@@ -1,3 +1,5 @@
+v0.7 - Improvements to locking code.  No change to iptables.
+
 v0.6.1 - Fixed places where netfilter used --l7-proto instead of --l7proto.
 
 v0.6 - Significant kernel code cleanup.  Attempted to make code SMP safe with
