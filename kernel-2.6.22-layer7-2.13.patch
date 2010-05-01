@@ -509,7 +509,7 @@
 +
 +	/* now that the skb is linearized, it's safe to set these. */
 +	app_data = skb->data + app_data_offset(skb);
-+	appdatalen = skb->tail - app_data;
++	appdatalen = skb_tail_pointer(skb) - app_data;
 +
 +	/* the return value gets checked later, when we're ready to use it */
 +	comppattern = compile_and_cache(info->pattern, info->protocol);

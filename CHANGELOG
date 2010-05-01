@@ -1,3 +1,6 @@
+v2.13 - 2.6 patch: Fixed compiler error on 64 bit platforms.
+
+
 v2.12.1 - Fixed documentation on iptables patch to reflect correct kernel 
 version boundary.
 
