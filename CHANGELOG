@@ -1,3 +1,7 @@
+v2.12 - Updated iptables patch.  Now there are two iptables patches, one 
+for kernels before 2.6.22 and one for 2.6.22 forward.
+
+
 v2.11 - Added missing nf_ct_l3proto_module_put() call to 2.6.20/2.6.21 
 patch. Added patch for 2.6.22.  Some stylistic changes to 2.6 kernel 
 code.
