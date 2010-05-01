@@ -1,3 +1,6 @@
+v2.14 - 2.6 patches: Added missing dependency (NF_CT_ACCT) and fixed 
+Makefile in 2.6.20-21 and 2.6.22.
+
 v2.13 - 2.6 patch: Fixed compiler error on 64 bit platforms.
 
 

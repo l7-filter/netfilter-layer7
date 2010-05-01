@@ -1,13 +1,14 @@
---- linux-2.6.21.1/net/netfilter/Kconfig	2007-04-27 16:49:26.000000000 -0500
-+++ linux-2.6.21.1-layer7/net/netfilter/Kconfig	2007-07-03 02:28:22.000000000 -0500
-@@ -640,6 +640,26 @@ config NETFILTER_XT_MATCH_STATE
+--- linux-2.6.22-rc7/net/netfilter/Kconfig	2007-07-01 14:54:24.000000000 -0500
++++ linux-2.6.22-rc7-layer7/net/netfilter/Kconfig	2007-07-03 03:21:32.000000000 -0500
+@@ -603,6 +603,27 @@ config NETFILTER_XT_MATCH_STATE
  
  	  To compile it as a module, choose M here.  If unsure, say N.
  
 +config NETFILTER_XT_MATCH_LAYER7
 +	tristate '"layer7" match support'
 +	depends on NETFILTER_XTABLES
-+	depends on IP_NF_CONNTRACK || NF_CONNTRACK
++	depends on EXPERIMENTAL && (IP_NF_CONNTRACK || NF_CONNTRACK)
++       depends on NF_CT_ACCT
 +	help
 +	  Say Y if you want to be able to classify connections (and their
 +	  packets) based on regular expression matching of their application
@@ -18,7 +19,7 @@
 +	  To compile it as a module, choose M here.  If unsure, say N.
 +
 +config NETFILTER_XT_MATCH_LAYER7_DEBUG
-+        bool 'layer7 debugging output'
++        bool 'Layer 7 debugging output'
 +        depends on NETFILTER_XT_MATCH_LAYER7
 +        help
 +          Say Y to get lots of debugging output.
@@ -27,18 +28,18 @@
  config NETFILTER_XT_MATCH_STATISTIC
  	tristate '"statistic" match support'
  	depends on NETFILTER_XTABLES
---- linux-2.6.21.1/net/netfilter/Makefile	2007-04-27 16:49:26.000000000 -0500
-+++ linux-2.6.21.1-layer7/net/netfilter/Makefile	2007-07-01 17:46:20.000000000 -0500
+--- linux-2.6.22-rc7/net/netfilter/Makefile	2007-07-01 14:54:24.000000000 -0500
++++ linux-2.6.22-rc7-layer7/net/netfilter/Makefile	2007-07-03 01:32:35.000000000 -0500
 @@ -68,6 +68,7 @@ obj-$(CONFIG_NETFILTER_XT_MATCH_QUOTA) +
  obj-$(CONFIG_NETFILTER_XT_MATCH_REALM) += xt_realm.o
  obj-$(CONFIG_NETFILTER_XT_MATCH_SCTP) += xt_sctp.o
  obj-$(CONFIG_NETFILTER_XT_MATCH_STATE) += xt_state.o
-+obj-$(CONFIG_NETFILTER_XT_MATCH_STATE) += xt_layer7.o
++obj-$(CONFIG_NETFILTER_XT_MATCH_LAYER7) += xt_layer7.o
  obj-$(CONFIG_NETFILTER_XT_MATCH_STATISTIC) += xt_statistic.o
  obj-$(CONFIG_NETFILTER_XT_MATCH_STRING) += xt_string.o
  obj-$(CONFIG_NETFILTER_XT_MATCH_TCPMSS) += xt_tcpmss.o
---- linux-2.6.21.1/net/netfilter/xt_layer7.c	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.21.1-layer7/net/netfilter/xt_layer7.c	2007-07-03 07:50:39.000000000 -0500
+--- linux-2.6.22-rc7/net/netfilter/xt_layer7.c	1969-12-31 18:00:00.000000000 -0600
++++ linux-2.6.22-rc7-layer7/net/netfilter/xt_layer7.c	2007-07-03 07:57:38.000000000 -0500
 @@ -0,0 +1,626 @@
 +/*
 +  Kernel module to match application layer (OSI layer 7) data in connections.
@@ -68,7 +69,6 @@
 +#include <net/netfilter/nf_conntrack_core.h>
 +#include <linux/netfilter/x_tables.h>
 +#include <linux/netfilter/xt_layer7.h>
-+#include <net/netfilter/nf_conntrack_compat.h>
 +#include <linux/ctype.h>
 +#include <linux/proc_fs.h>
 +
@@ -132,14 +132,14 @@
 +{
 +	switch (i) {
 +		case 0 ... 9:
-+			return (char)(i + '0');
++			return (i + '0');
 +			break;
 +		case 10 ... 15:
-+			return (char)(i - 10 + 'a');
++			return (i - 10 + 'a');
 +			break;
 +		default:
 +			if (net_ratelimit())
-+				printk("Problem in dec2hex\n");
++				printk("layer7: Problem in dec2hex\n");
 +			return '\0';
 +	}
 +}
@@ -169,7 +169,8 @@
 +
 +/* Use instead of regcomp.  As we expect to be seeing the same regexps over and
 +over again, it make sense to cache the results. */
-+static regexp * compile_and_cache(char * regex_string, char * protocol)
++static regexp * compile_and_cache(const char * regex_string, 
++                                  const char * protocol)
 +{
 +	struct pattern_cache * node               = first_pattern_cache;
 +	struct pattern_cache * last_pattern_cache = first_pattern_cache;
@@ -221,7 +222,7 @@
 +	/* copy the string and compile the regex */
 +	len = strlen(regex_string);
 +	DPRINTK("About to compile this: \"%s\"\n", regex_string);
-+	node->pattern = regcomp(regex_string, &len);
++	node->pattern = regcomp((char *)regex_string, &len);
 +	if ( !node->pattern ) {
 +		if (net_ratelimit())
 +			printk(KERN_ERR "layer7: Error compiling regexp "
@@ -236,11 +237,11 @@
 +
 +static int can_handle(const struct sk_buff *skb)
 +{
-+	if(!skb->nh.iph) /* not IP */
++	if(!ip_hdr(skb)) /* not IP */
 +		return 0;
-+	if(skb->nh.iph->protocol != IPPROTO_TCP &&
-+	   skb->nh.iph->protocol != IPPROTO_UDP &&
-+	   skb->nh.iph->protocol != IPPROTO_ICMP)
++	if(ip_hdr(skb)->protocol != IPPROTO_TCP &&
++	   ip_hdr(skb)->protocol != IPPROTO_UDP &&
++	   ip_hdr(skb)->protocol != IPPROTO_ICMP)
 +		return 0;
 +	return 1;
 +}
@@ -248,11 +249,11 @@
 +/* Returns offset the into the skb->data that the application data starts */
 +static int app_data_offset(const struct sk_buff *skb)
 +{
-+	/* In case we are ported somewhere (ebtables?) where skb->nh.iph
++	/* In case we are ported somewhere (ebtables?) where ip_hdr(skb)
 +	isn't set, this can be gotten from 4*(skb->data[0] & 0x0f) as well. */
-+	int ip_hl = 4*skb->nh.iph->ihl;
++	int ip_hl = 4*ip_hdr(skb)->ihl;
 +
-+	if( skb->nh.iph->protocol == IPPROTO_TCP ) {
++	if( ip_hdr(skb)->protocol == IPPROTO_TCP ) {
 +		/* 12 == offset into TCP header for the header length field.
 +		Can't get this with skb->h.th->doff because the tcphdr
 +		struct doesn't get set when routing (this is confirmed to be
@@ -260,9 +261,9 @@
 +		int tcp_hl = 4*(skb->data[ip_hl + 12] >> 4);
 +
 +		return ip_hl + tcp_hl;
-+	} else if( skb->nh.iph->protocol == IPPROTO_UDP  ) {
++	} else if( ip_hdr(skb)->protocol == IPPROTO_UDP  ) {
 +		return ip_hl + 8; /* UDP header is always 8 bytes */
-+	} else if( skb->nh.iph->protocol == IPPROTO_ICMP ) {
++	} else if( ip_hdr(skb)->protocol == IPPROTO_ICMP ) {
 +		return ip_hl + 8; /* ICMP header is 8 bytes */
 +	} else {
 +		if (net_ratelimit())
@@ -277,7 +278,7 @@
 +                           struct nf_conn * master_conntrack, 
 +                           enum ip_conntrack_info ctinfo,
 +                           enum ip_conntrack_info master_ctinfo,
-+                           struct xt_layer7_info * info)
++                           const struct xt_layer7_info * info)
 +{
 +	/* If we're in here, throw the app data away */
 +	if(master_conntrack->layer7.app_data != NULL) {
@@ -449,7 +450,7 @@
 +	/* sidestep const without getting a compiler warning... */
 +	struct sk_buff * skb = (struct sk_buff *)skbin; 
 +
-+	struct xt_layer7_info * info = (struct xt_layer7_info *)matchinfo;
++	const struct xt_layer7_info * info = matchinfo;
 +	enum ip_conntrack_info master_ctinfo, ctinfo;
 +	struct nf_conn *master_conntrack, *conntrack;
 +	unsigned char * app_data;
@@ -468,8 +469,8 @@
 +	/* Treat parent & all its children together as one connection, except
 +	for the purpose of setting conntrack->layer7.app_proto in the actual
 +	connection. This makes /proc/net/ip_conntrack more satisfying. */
-+	if(!(conntrack = nf_ct_get((struct sk_buff *)skb, &ctinfo)) ||
-+	   !(master_conntrack=nf_ct_get((struct sk_buff *)skb,&master_ctinfo))){
++	if(!(conntrack = nf_ct_get(skb, &ctinfo)) ||
++	   !(master_conntrack=nf_ct_get(skb,&master_ctinfo))){
 +		DPRINTK("layer7: couldn't get conntrack.\n");
 +		spin_unlock_bh(&l7_lock);
 +		return info->invert;
@@ -509,7 +510,7 @@
 +
 +	/* now that the skb is linearized, it's safe to set these. */
 +	app_data = skb->data + app_data_offset(skb);
-+	appdatalen = skb->tail - app_data;
++	appdatalen = skb_tail_pointer(skb) - app_data;
 +
 +	/* the return value gets checked later, when we're ready to use it */
 +	comppattern = compile_and_cache(info->pattern, info->protocol);
@@ -666,8 +667,8 @@
 +module_init(xt_layer7_init);
 +module_exit(xt_layer7_fini);
 +
---- linux-2.6.21.1/net/netfilter/regexp/regexp.c	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.21.1-layer7/net/netfilter/regexp/regexp.c	2007-06-25 19:50:09.000000000 -0500
+--- linux-2.6.22-rc7/net/netfilter/regexp/regexp.c	1969-12-31 18:00:00.000000000 -0600
++++ linux-2.6.22-rc7-layer7/net/netfilter/regexp/regexp.c	2007-07-03 01:32:35.000000000 -0500
 @@ -0,0 +1,1197 @@
 +/*
 + * regcomp and regexec -- regsub and regerror are elsewhere
@@ -1866,8 +1867,8 @@
 +#endif
 +
 +
---- linux-2.6.21.1/net/netfilter/regexp/regexp.h	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.21.1-layer7/net/netfilter/regexp/regexp.h	2007-06-25 19:50:09.000000000 -0500
+--- linux-2.6.22-rc7/net/netfilter/regexp/regexp.h	1969-12-31 18:00:00.000000000 -0600
++++ linux-2.6.22-rc7-layer7/net/netfilter/regexp/regexp.h	2007-07-03 01:32:35.000000000 -0500
 @@ -0,0 +1,41 @@
 +/*
 + * Definitions etc. for regexp(3) routines.
@@ -1910,16 +1911,16 @@
 +void regerror(char *s);
 +
 +#endif
---- linux-2.6.21.1/net/netfilter/regexp/regmagic.h	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.21.1-layer7/net/netfilter/regexp/regmagic.h	2007-06-25 19:50:09.000000000 -0500
+--- linux-2.6.22-rc7/net/netfilter/regexp/regmagic.h	1969-12-31 18:00:00.000000000 -0600
++++ linux-2.6.22-rc7-layer7/net/netfilter/regexp/regmagic.h	2007-07-03 01:32:35.000000000 -0500
 @@ -0,0 +1,5 @@
 +/*
 + * The first byte of the regexp internal "program" is actually this magic
 + * number; the start node begins in the second byte.
 + */
 +#define	MAGIC	0234
---- linux-2.6.21.1/net/netfilter/regexp/regsub.c	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.21.1-layer7/net/netfilter/regexp/regsub.c	2007-06-25 19:50:09.000000000 -0500
+--- linux-2.6.22-rc7/net/netfilter/regexp/regsub.c	1969-12-31 18:00:00.000000000 -0600
++++ linux-2.6.22-rc7-layer7/net/netfilter/regexp/regsub.c	2007-07-03 01:32:35.000000000 -0500
 @@ -0,0 +1,95 @@
 +/*
 + * regsub
@@ -2016,9 +2017,9 @@
 +	}
 +	*dst++ = '\0';
 +}
---- linux-2.6.21.1/net/netfilter/nf_conntrack_core.c	2007-04-27 16:49:26.000000000 -0500
-+++ linux-2.6.21.1-layer7/net/netfilter/nf_conntrack_core.c	2007-07-03 00:58:54.000000000 -0500
-@@ -356,6 +356,14 @@ destroy_conntrack(struct nf_conntrack *n
+--- linux-2.6.22-rc7/net/netfilter/nf_conntrack_core.c	2007-07-01 14:54:24.000000000 -0500
++++ linux-2.6.22-rc7-layer7/net/netfilter/nf_conntrack_core.c	2007-07-03 01:32:35.000000000 -0500
+@@ -330,6 +330,14 @@ destroy_conntrack(struct nf_conntrack *n
  	 * too. */
  	nf_ct_remove_expectations(ct);
  
@@ -2033,9 +2034,9 @@
  	/* We overload first tuple to link into unconfirmed list. */
  	if (!nf_ct_is_confirmed(ct)) {
  		BUG_ON(list_empty(&ct->tuplehash[IP_CT_DIR_ORIGINAL].list));
---- linux-2.6.21.1/net/netfilter/nf_conntrack_standalone.c	2007-04-27 16:49:26.000000000 -0500
-+++ linux-2.6.21.1-layer7/net/netfilter/nf_conntrack_standalone.c	2007-07-03 00:30:45.000000000 -0500
-@@ -195,6 +195,11 @@ static int ct_seq_show(struct seq_file *
+--- linux-2.6.22-rc7/net/netfilter/nf_conntrack_standalone.c	2007-07-01 14:54:24.000000000 -0500
++++ linux-2.6.22-rc7-layer7/net/netfilter/nf_conntrack_standalone.c	2007-07-03 01:32:35.000000000 -0500
+@@ -184,6 +184,11 @@ static int ct_seq_show(struct seq_file *
  		return -ENOSPC;
  #endif
  
@@ -2047,8 +2048,8 @@
  	if (seq_printf(s, "use=%u\n", atomic_read(&conntrack->ct_general.use)))
  		return -ENOSPC;
  	
---- linux-2.6.21.1/include/net/netfilter/nf_conntrack.h	2007-04-27 16:49:26.000000000 -0500
-+++ linux-2.6.21.1-layer7/include/net/netfilter/nf_conntrack.h	2007-07-01 19:06:31.000000000 -0500
+--- linux-2.6.22-rc7/include/net/netfilter/nf_conntrack.h	2007-07-01 14:54:24.000000000 -0500
++++ linux-2.6.22-rc7-layer7/include/net/netfilter/nf_conntrack.h	2007-07-03 01:32:35.000000000 -0500
 @@ -128,6 +128,22 @@ struct nf_conn
  	u_int32_t secmark;
  #endif
@@ -2072,8 +2073,8 @@
  	/* Storage reserved for other modules: */
  	union nf_conntrack_proto proto;
  
---- linux-2.6.21.1/include/linux/netfilter/xt_layer7.h	1969-12-31 18:00:00.000000000 -0600
-+++ linux-2.6.21.1-layer7/include/linux/netfilter/xt_layer7.h	2007-07-01 18:17:38.000000000 -0500
+--- linux-2.6.22-rc7/include/linux/netfilter/xt_layer7.h	1969-12-31 18:00:00.000000000 -0600
++++ linux-2.6.22-rc7-layer7/include/linux/netfilter/xt_layer7.h	2007-07-03 07:48:19.000000000 -0500
 @@ -0,0 +1,13 @@
 +#ifndef _XT_LAYER7_H
 +#define _XT_LAYER7_H
@@ -2083,8 +2084,8 @@
 +
 +struct xt_layer7_info {
 +    char protocol[MAX_PROTOCOL_LEN];
-+    char invert:1;
 +    char pattern[MAX_PATTERN_LEN];
++    u_int8_t invert;
 +};
 +
 +#endif /* _XT_LAYER7_H */
