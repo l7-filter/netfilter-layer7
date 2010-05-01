@@ -1,3 +1,6 @@
+v2.16.1 - Fixed and expanded documentation here and in README.
+
+
 v2.16 - iptables patch: Added a patch that works with iptables 1.4.0rc1.
 
 
@@ -18,7 +21,7 @@ version boundary.
 
 
 v2.12 - Updated iptables patch.  Now there are two iptables patches, one 
-for kernels before 2.6.22 and one for 2.6.22 forward.
+for kernels before 2.6.20 and one for 2.6.20 forward.
 
 
 v2.11 - Added missing nf_ct_l3proto_module_put() call to 2.6.20/2.6.21 
