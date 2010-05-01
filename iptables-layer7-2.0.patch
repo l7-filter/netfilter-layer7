@@ -307,12 +307,12 @@ diff -Nurp iptables-1.3.3/extensions/libipt_layer7.c iptables-1.3.3-layer7/exten
 +	return 1;
 +}
 +
-+/* Final check; must have specified --pattern. */
++/* Final check; must have specified --l7proto */
 +static void final_check(unsigned int flags)
 +{
 +	if (!flags)
 +		exit_error(PARAMETER_PROBLEM,
-+			   "LAYER7 match: You must specify `--pattern'");
++			   "LAYER7 match: You must specify `--l7proto'");
 +}
 +
 +static void print_protocol(char s[], int invert, int numeric)
