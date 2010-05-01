@@ -9,7 +9,7 @@ they probably work with any kernel of the appropriate series.
 
 The iptables patch is against 1.2.11, but should work with any
 reasonably modern version of iptables.  Note that iptables will not
-compile against Linux 2.6.7 (this is not a l7-filter bug), but it will
+compile against Linux 2.6.7 (this is NOT a l7-filter bug), but it will
 still work if you compile it against another version.
 
 Please see the documentation at http://l7-filter.sf.net/ , specifically

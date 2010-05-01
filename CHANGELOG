@@ -1,3 +1,6 @@
+v0.9.1 - Changes to ipt_helper.c that aren't part of l7-filter had crept
+into the 2.6 patch of v0.9.0.  They are now removed.  No other changes.
+
 v0.9.0 - 2.4 version now should compile correctly if l7-filter is
 built-in. Fixed a significant bug which caused some patterns not to work
 (tolower was munging 'upper ascii' characters).  No change to iptables.

@@ -143,43 +143,6 @@ diff -Nurp linux-2.6.7-stock/net/ipv4/netfilter/ip_conntrack_standalone.c linux-
  	len += sprintf(buffer + len, "\n");
  
  	return len;
-diff -Nurp linux-2.6.7-stock/net/ipv4/netfilter/ipt_helper.c linux-2.6.7-layer7-clean/net/ipv4/netfilter/ipt_helper.c
---- linux-2.6.7-stock/net/ipv4/netfilter/ipt_helper.c	2004-05-09 21:32:54.000000000 -0500
-+++ linux-2.6.7-layer7-clean/net/ipv4/netfilter/ipt_helper.c	2004-06-21 00:15:02.000000000 -0500
-@@ -51,7 +51,7 @@ match(const struct sk_buff *skb,
- 
- 	if (!ct->master) {
- 		DEBUGP("ipt_helper: conntrack %p has no master\n", ct);
--		return 0;
-+		return info->invert;
- 	}
- 
- 	exp = ct->master;
-@@ -71,8 +71,11 @@ match(const struct sk_buff *skb,
- 	DEBUGP("master's name = %s , info->name = %s\n", 
- 		exp->expectant->helper->name, info->name);
- 
--	ret = !strncmp(exp->expectant->helper->name, info->name, 
--	               strlen(exp->expectant->helper->name)) ^ info->invert;
-+	if(info->name[0] == '\0') /* special case meaning "any" */
-+		ret = 1 ^ info->invert;
-+	else
-+		ret = !strncmp(exp->expectant->helper->name, info->name, 
-+	        	       strlen(exp->expectant->helper->name)) ^ info->invert;
- out_unlock:
- 	READ_UNLOCK(&ip_conntrack_lock);
- 	return ret;
-@@ -92,10 +95,6 @@ static int check(const char *tablename,
- 	if (matchsize != IPT_ALIGN(sizeof(struct ipt_helper_info)))
- 		return 0;
- 
--	/* verify that we actually should match anything */
--	if ( strlen(info->name) == 0 )
--		return 0;
--	
- 	return 1;
- }
- 
 diff -Nurp linux-2.6.7-stock/net/ipv4/netfilter/ipt_layer7.c linux-2.6.7-layer7-clean/net/ipv4/netfilter/ipt_layer7.c
 --- linux-2.6.7-stock/net/ipv4/netfilter/ipt_layer7.c	1969-12-31 18:00:00.000000000 -0600
 +++ linux-2.6.7-layer7-clean/net/ipv4/netfilter/ipt_layer7.c	2004-06-27 19:03:51.000000000 -0500
