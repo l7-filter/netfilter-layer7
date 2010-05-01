@@ -1,3 +1,7 @@
+v2.22 - Updated for iptables 1.4.3 and 1.4.4.  Organized files for older 
+iptables releases using a similar system as the kernel patches.
+
+
 v2.21 - Updated for Linux 2.6.27 and 2.6.28.  Removed #if 
 LINUX_VERSION_CODE statements that can't ever be true because of how 
 these patches are organized.
