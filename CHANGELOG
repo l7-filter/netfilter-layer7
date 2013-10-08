@@ -1,3 +1,9 @@
+v2.23 - Updated for Linux 2.6.35 and up.  New API changes were
+introduced in the Kernel release 2.6.35 and some (specifically
+to xt_match struct found in linux/netfilter/x_tables.h), affected
+l7-filter.  Patch by Huascar Tejeda.
+
+
 v2.22 - Updated for iptables 1.4.3 and 1.4.4.  Organized files for older 
 iptables releases using a similar system as the kernel patches.
 

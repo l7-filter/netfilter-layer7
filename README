@@ -10,6 +10,10 @@ In this directory you will find:
 
 ***** kernel patches *****
 
+- kernel-2.6.35-2.23.patch
+
+  This patch is against 2.6.35.
+
 - kernel-2.6.25-2.6.28-layer7-2.22.patch
 
   This patch is against 2.6.28. It will not work with 2.6.24.x or earlier.
